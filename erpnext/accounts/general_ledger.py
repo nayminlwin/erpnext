@@ -87,7 +87,8 @@ def merge_similar_entries(gl_map):
 			merged_gl_map.append(entry)
 
 	# filter zero debit and credit entries
-	merged_gl_map = filter(lambda x: flt(x.debit, 9)!=0 or flt(x.credit, 9)!=0, merged_gl_map)
+	precision = frappe.get_precision('GL Entry', 'debit_in_account_currency')
+	merged_gl_map = filter(lambda x: flt(x.debit, precision)!=0 or flt(x.credit, precision)!=0, merged_gl_map)
 	merged_gl_map = list(merged_gl_map)
 
 	return merged_gl_map
