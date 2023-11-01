@@ -105,16 +105,13 @@ def convert_to_presentation_currency(gl_entries, currency_info):
 		account_currency = entry['account_currency']
 
 		if account_currency != presentation_currency:
-			value = debit or credit
-
 			date = currency_info['report_date'] if not is_p_or_l_account(account) else entry['posting_date']
-			converted_value = convert(value, presentation_currency, company_currency, date)
 
 			if entry.get('debit'):
-				entry['debit'] = converted_value
+				entry['debit'] = convert(debit, presentation_currency, company_currency, date)
 
 			if entry.get('credit'):
-				entry['credit'] = converted_value
+				entry['credit'] = convert(credit, presentation_currency, company_currency, date)
 
 		elif account_currency == presentation_currency:
 			if entry.get('debit'):

@@ -13,7 +13,7 @@ from six import iteritems
 def execute(filters=None):
 	if not filters: filters = {}
 
-	validate_filters(filters)
+	# validate_filters(filters)
 
 	include_uom = filters.get("include_uom")
 	columns = get_columns()

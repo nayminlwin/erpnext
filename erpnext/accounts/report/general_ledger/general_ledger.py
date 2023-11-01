@@ -26,8 +26,7 @@ def execute(filters=None):
 		account_details.setdefault(acc.name, acc)
 
 	if filters.get('party'):
-		parties = cstr(filters.get("party")).strip()
-		filters.party = [d.strip() for d in parties.split(',') if d]
+		filters.party = [filters.get("party")]
 
 	validate_filters(filters, account_details)
 
@@ -317,6 +316,7 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
 def get_result_as_list(data, filters):
 	balance, balance_in_account_currency = 0, 0
 	inv_details = get_supplier_invoice_details()
+	presentation_currency = filters.get("presentation_currency")
 
 	for d in data:
 		if not d.get('posting_date'):
@@ -324,6 +324,10 @@ def get_result_as_list(data, filters):
 
 		balance = get_balance(d, balance, 'debit', 'credit')
 		d['balance'] = balance
+		if presentation_currency and filters.account_currency != presentation_currency:    
+			balance_in_account_currency = get_balance(d, balance_in_account_currency,
+				'debit_in_account_currency', 'credit_in_account_currency')
+			d['balance_in_account_currency'] = balance_in_account_currency
 
 		d['account_currency'] = filters.account_currency
 		d['bill_no'] = inv_details.get(d.get('against_voucher'), '')
@@ -386,6 +390,28 @@ def get_columns(filters):
 			"width": 130
 		}
 	]
+
+	if filters.account_currency and currency != filters.account_currency:
+		columns.extend([
+			{
+				"label": _("Debit") + " (" + filters.account_currency + ")",
+				"fieldname": "debit_in_account_currency",
+				"fieldtype": "Float",
+				"width": 100
+			},
+			{
+				"label": _("Credit") + " (" + filters.account_currency + ")",
+				"fieldname": "credit_in_account_currency",
+				"fieldtype": "Float",
+				"width": 100
+			},
+			{
+				"label": _("Balance") + " (" + filters.account_currency + ")",
+				"fieldname": "balance_in_account_currency",
+				"fieldtype": "Float",
+				"width": 100
+			}
+		])
 
 	columns.extend([
 		{
