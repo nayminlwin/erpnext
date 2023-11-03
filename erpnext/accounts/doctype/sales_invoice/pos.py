@@ -578,8 +578,8 @@ def validate_item(doc):
 def submit_invoice(si_doc, name, doc, name_list):
 	try:
 		si_doc.insert()
-		si_doc.submit()
 		frappe.db.commit()
+		si_doc.submit()
 		name_list.append(name)
 	except Exception as e:
 		if frappe.message_log:
