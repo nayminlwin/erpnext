@@ -849,11 +849,11 @@ class StockEntry(StockController):
 
 		if self.purpose in ("Repack", "Manufacture"):
 			incoming_items_cost = sum(flt(t.basic_amount) for t in self.get("items") if t.is_finished_item)
+			incoming_items_qty = sum(flt(t.qty) for t in self.get("items") if t.is_finished_item)
 		else:
 			incoming_items_cost = sum(flt(t.basic_amount) for t in self.get("items") if t.t_warehouse)
+			incoming_items_qty = sum(flt(t.qty) for t in self.get("items") if t.t_warehouse)
 
-		if not incoming_items_cost:
-			return
 
 		for d in self.get("items"):
 			if self.purpose in ("Repack", "Manufacture") and not d.is_finished_item:
@@ -862,7 +862,14 @@ class StockEntry(StockController):
 			elif not d.t_warehouse:
 				d.additional_cost = 0
 				continue
-			d.additional_cost = (flt(d.basic_amount) / incoming_items_cost) * self.total_additional_costs
+
+			# If incoming items rate is zero, apply additional cost by qty
+			if incoming_items_cost:
+				d.additional_cost = (flt(d.basic_amount) / incoming_items_cost) * self.total_additional_costs
+			elif incoming_items_qty:
+				d.additional_cost = (flt(d.qty) / incoming_items_qty) * self.total_additional_costs
+			else:
+				d.additional_cost = 0
 
 	def update_valuation_rate(self):
 		for d in self.get("items"):
@@ -1260,14 +1267,16 @@ class StockEntry(StockController):
 
 		if self.purpose in ("Repack", "Manufacture"):
 			total_basic_amount = sum(flt(t.basic_amount) for t in self.get("items") if t.is_finished_item)
+			total_qty = sum(flt(t.qty) for t in self.get("items") if t.is_finished_item)
 		else:
 			total_basic_amount = sum(flt(t.basic_amount) for t in self.get("items") if t.t_warehouse)
+			total_qty = sum(flt(t.qty) for t in self.get("items") if t.t_warehouse)
 
 		divide_based_on = total_basic_amount
 
 		if self.get("additional_costs") and not total_basic_amount:
 			# if total_basic_amount is 0, distribute additional charges based on qty
-			divide_based_on = sum(item.qty for item in list(self.get("items")))
+			divide_based_on = total_qty
 
 		item_account_wise_additional_cost = {}
 
