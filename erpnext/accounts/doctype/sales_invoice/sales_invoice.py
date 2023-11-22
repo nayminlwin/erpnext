@@ -1288,7 +1288,8 @@ def make_delivery_note(source_name, target_doc=None):
 				"serial_no": "serial_no",
 				"sales_order": "against_sales_order",
 				"so_detail": "so_detail",
-				"cost_center": "cost_center"
+				"cost_center": "cost_center",
+                "expense_account": "expense_account"
 			},
 			"postprocess": update_item,
 			"condition": lambda doc: doc.delivered_by_supplier!=1
