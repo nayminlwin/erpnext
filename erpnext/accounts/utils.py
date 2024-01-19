@@ -626,8 +626,10 @@ def update_reference_in_payment_entry(
 		"total_amount": d.grand_total,
 		"outstanding_amount": d.outstanding_amount,
 		"allocated_amount": d.allocated_amount,
-		"exchange_rate": d.exchange_rate if d.exchange_gain_loss else payment_entry.get_exchange_rate(),
-		"exchange_gain_loss": d.exchange_gain_loss,
+		"exchange_rate": d.exchange_rate
+		if d.difference_amount is not None
+		else payment_entry.get_exchange_rate(),
+		"exchange_gain_loss": d.difference_amount,
 	}
 
 	if d.voucher_detail_no:
@@ -1220,8 +1222,13 @@ def get_autoname_with_number(number_value, doc_title, company):
 
 def parse_naming_series_variable(doc, variable):
 	if variable == "FY":
-		date = doc.get("posting_date") or doc.get("transaction_date") or getdate()
-		return get_fiscal_year(date=date, company=doc.get("company"))[0]
+		if doc:
+			date = doc.get("posting_date") or doc.get("transaction_date") or getdate()
+			company = doc.get("company")
+		else:
+			date = getdate()
+			company = None
+		return get_fiscal_year(date=date, company=company)[0]
 
 
 @frappe.whitelist()

@@ -300,7 +300,12 @@ class SalesInvoice(SellingController):
 		update_linked_doc(self.doctype, self.name, self.inter_company_invoice_reference)
 
 		# create the loyalty point ledger entry if the customer is enrolled in any loyalty program
-		if not self.is_return and not self.is_consolidated and self.loyalty_program:
+		if (
+			not self.is_return
+			and not self.is_consolidated
+			and self.loyalty_program
+			and not self.dont_create_loyalty_points
+		):
 			self.make_loyalty_point_entry()
 		elif (
 			self.is_return and self.return_against and not self.is_consolidated and self.loyalty_program
@@ -2195,9 +2200,18 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 
 
 def get_received_items(reference_name, doctype, reference_fieldname):
+	reference_field = "inter_company_invoice_reference"
+	if doctype == "Purchase Order":
+		reference_field = "inter_company_order_reference"
+
+	filters = {
+		reference_field: reference_name,
+		"docstatus": 1,
+	}
+
 	target_doctypes = frappe.get_all(
 		doctype,
-		filters={"inter_company_invoice_reference": reference_name, "docstatus": 1},
+		filters=filters,
 		as_list=True,
 	)
 
@@ -2377,10 +2391,6 @@ def get_loyalty_programs(customer):
 		return lp_details
 	else:
 		return lp_details
-
-
-def on_doctype_update():
-	frappe.db.add_index("Sales Invoice", ["customer", "is_return", "return_against"])
 
 
 @frappe.whitelist()
