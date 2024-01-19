@@ -743,10 +743,13 @@ class Asset(AccountsController):
 				straight_line_idx = [
 					s.idx
 					for s in self.get("schedules")
-					if s.finance_book_id == d.finance_book_id
+					if int(s.finance_book_id) == int(d.finance_book_id)
 					and (s.depreciation_method == "Straight Line" or s.depreciation_method == "Manual")
 				]
-				if i > 0 and self.flags.decrease_in_asset_value_due_to_value_adjustment:
+				if i > 0 and (
+					self.flags.decrease_in_asset_value_due_to_value_adjustment or
+					self.flags.increase_in_asset_value_due_to_repair
+					):
 					accumulated_depreciation = self.get("schedules")[i - 1].accumulated_depreciation_amount
 				else:
 					accumulated_depreciation = flt(self.opening_accumulated_depreciation)
@@ -1417,7 +1420,8 @@ def get_straight_line_or_manual_depr_amount(
 	# if the Depreciation Schedule is being modified after Asset Repair due to increase in asset value
 	elif asset.flags.increase_in_asset_value_due_to_repair:
 		return (flt(row.value_after_depreciation) - flt(row.expected_value_after_useful_life)) / flt(
-			row.total_number_of_depreciations - asset.number_of_depreciations_booked
+			# row.total_number_of_depreciations - asset.number_of_depreciations_booked
+			number_of_pending_depreciations
 		)
 	# if the Depreciation Schedule is being modified after Asset Value Adjustment due to decrease in asset value
 	elif asset.flags.decrease_in_asset_value_due_to_value_adjustment:

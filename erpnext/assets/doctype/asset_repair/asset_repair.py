@@ -59,7 +59,7 @@ class AssetRepair(AccountsController):
 					self.modify_depreciation_schedule()
 
 			self.asset_doc.flags.ignore_validate_update_after_submit = True
-			self.asset_doc.prepare_depreciation_data()
+			self.asset_doc.prepare_depreciation_data(ignore_booked_entry=True)
 			self.asset_doc.save()
 
 	def before_cancel(self):
@@ -86,7 +86,7 @@ class AssetRepair(AccountsController):
 					self.revert_depreciation_schedule_on_cancellation()
 
 			self.asset_doc.flags.ignore_validate_update_after_submit = True
-			self.asset_doc.prepare_depreciation_data()
+			self.asset_doc.prepare_depreciation_data(ignore_booked_entry=True)
 			self.asset_doc.save()
 
 	def after_delete(self):
