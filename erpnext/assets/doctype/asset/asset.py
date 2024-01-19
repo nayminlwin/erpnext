@@ -1417,7 +1417,7 @@ def get_straight_line_or_manual_depr_amount(
 	# if the Depreciation Schedule is being modified after Asset Repair due to increase in asset value
 	elif asset.flags.increase_in_asset_value_due_to_repair:
 		return (flt(row.value_after_depreciation) - flt(row.expected_value_after_useful_life)) / flt(
-			row.total_number_of_depreciations
+			row.total_number_of_depreciations - asset.number_of_depreciations_booked
 		)
 	# if the Depreciation Schedule is being modified after Asset Value Adjustment due to decrease in asset value
 	elif asset.flags.decrease_in_asset_value_due_to_value_adjustment:
