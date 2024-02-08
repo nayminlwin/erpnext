@@ -55,7 +55,7 @@ class AuthorizationRule(Document):
 			frappe.throw(_("Discount must be less than 100"))
 		elif self.based_on == "Customerwise Discount" and not self.master_name:
 			frappe.throw(_("Customer required for 'Customerwise Discount'"))
-		else:
+		elif self.based_on is None:
 			self.based_on = "Not Applicable"
 
 	def validate(self):
