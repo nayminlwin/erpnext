@@ -193,7 +193,6 @@ class TestPurchaseReceipt(FrappeTestCase):
 		batch_no = pr.items[0].batch_no
 		pr.cancel()
 
-		self.assertFalse(frappe.db.get_value("Batch", {"item": item.name, "reference_name": pr.name}))
 		self.assertFalse(frappe.db.get_all("Serial No", {"batch_no": batch_no}))
 
 	def test_purchase_receipt_gl_entry(self):
@@ -1595,9 +1594,10 @@ class TestPurchaseReceipt(FrappeTestCase):
 		make_stock_entry(
 			purpose="Material Receipt",
 			item_code=item.name,
-			qty=15,
+			qty=20,
 			company=company,
 			to_warehouse=from_warehouse,
+			posting_date=add_days(today(), -3),
 		)
 
 		# Step 3: Create Delivery Note with Internal Customer
@@ -1620,13 +1620,15 @@ class TestPurchaseReceipt(FrappeTestCase):
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_inter_company_purchase_receipt
 
 		pr = make_inter_company_purchase_receipt(dn.name)
+		pr.set_posting_time = 1
+		pr.posting_date = today()
 		pr.items[0].qty = 15
 		pr.items[0].from_warehouse = target_warehouse
 		pr.items[0].warehouse = to_warehouse
 		pr.items[0].rejected_warehouse = from_warehouse
 		pr.save()
 
-		self.assertRaises(OverAllowanceError, pr.submit)
+		self.assertRaises(frappe.ValidationError, pr.submit)
 
 		# Step 5: Test Over Receipt Allowance
 		frappe.db.set_single_value("Stock Settings", "over_delivery_receipt_allowance", 50)
@@ -1638,8 +1640,10 @@ class TestPurchaseReceipt(FrappeTestCase):
 			company=company,
 			from_warehouse=from_warehouse,
 			to_warehouse=target_warehouse,
+			posting_date=add_days(pr.posting_date, -1),
 		)
 
+		pr.reload()
 		pr.submit()
 
 		frappe.db.set_single_value("Stock Settings", "over_delivery_receipt_allowance", 0)
@@ -2171,6 +2175,54 @@ class TestPurchaseReceipt(FrappeTestCase):
 		pr_doc.save()
 		pr_doc.reload()
 		self.assertFalse(pr_doc.items[0].from_warehouse)
+
+	def test_do_not_delete_batch_implicitly(self):
+		item = make_item(
+			"_Test Item With Delete Batch",
+			{"has_batch_no": 1, "create_new_batch": 1, "batch_number_series": "TBWDB.#####"},
+		).name
+
+		pr = make_purchase_receipt(item_code=item, qty=10, rate=100)
+		batch_no = pr.items[0].batch_no
+		self.assertTrue(frappe.db.exists("Batch", batch_no))
+
+		pr.cancel()
+		self.assertTrue(frappe.db.exists("Batch", batch_no))
+
+	def test_pr_billed_amount_against_return_entry(self):
+		from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import make_debit_note
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+			make_purchase_invoice as make_pi_from_pr,
+		)
+
+		# Create a Purchase Receipt and Fully Bill it
+		pr = make_purchase_receipt(qty=10)
+		pi = make_pi_from_pr(pr.name)
+		pi.insert()
+		pi.submit()
+
+		# Debit Note - 50% Qty & enable updating PR billed amount
+		pi_return = make_debit_note(pi.name)
+		pi_return.items[0].qty = -5
+		pi_return.update_billed_amount_in_purchase_receipt = 1
+		pi_return.submit()
+
+		# Check if the billed amount reduced
+		pr.reload()
+		self.assertEqual(pr.per_billed, 50)
+
+		pi_return.reload()
+		pi_return.cancel()
+
+		# Debit Note - 50% Qty & disable updating PR billed amount
+		pi_return = make_debit_note(pi.name)
+		pi_return.items[0].qty = -5
+		pi_return.update_billed_amount_in_purchase_receipt = 0
+		pi_return.submit()
+
+		# Check if the billed amount stayed the same
+		pr.reload()
+		self.assertEqual(pr.per_billed, 100)
 
 
 def prepare_data_for_internal_transfer():

@@ -514,6 +514,11 @@ class PurchaseInvoice(BuyingController):
 		super(PurchaseInvoice, self).on_submit()
 
 		self.check_prev_docstatus()
+
+		if self.is_return and not self.update_billed_amount_in_purchase_order:
+			# NOTE status updating bypassed for is_return
+			self.status_updater = []
+
 		self.update_status_updater_args()
 		self.update_prevdoc_status()
 
@@ -671,9 +676,7 @@ class PurchaseInvoice(BuyingController):
 						"credit_in_account_currency": base_grand_total
 						if self.party_account_currency == self.company_currency
 						else grand_total,
-						"against_voucher": self.return_against
-						if cint(self.is_return) and self.return_against
-						else self.name,
+						"against_voucher": self.name,
 						"against_voucher_type": self.doctype,
 						"project": self.project,
 						"cost_center": self.cost_center,
@@ -856,9 +859,14 @@ class PurchaseInvoice(BuyingController):
 
 					if provisional_accounting_for_non_stock_items:
 						if item.purchase_receipt:
-							provisional_account = frappe.db.get_value(
-								"Purchase Receipt Item", item.pr_detail, "provisional_expense_account"
-							) or self.get_company_default("default_provisional_account")
+							provisional_account, pr_qty, pr_base_rate = frappe.get_cached_value(
+								"Purchase Receipt Item",
+								item.pr_detail,
+								["provisional_expense_account", "qty", "base_rate"],
+							)
+							provisional_account = provisional_account or self.get_company_default(
+								"default_provisional_account"
+							)
 							purchase_receipt_doc = purchase_receipt_doc_map.get(item.purchase_receipt)
 
 							if not purchase_receipt_doc:
@@ -875,13 +883,18 @@ class PurchaseInvoice(BuyingController):
 									"voucher_detail_no": item.pr_detail,
 									"account": provisional_account,
 								},
-								["name"],
+								"name",
 							)
 
 							if expense_booked_in_pr:
 								# Intentionally passing purchase invoice item to handle partial billing
 								purchase_receipt_doc.add_provisional_gl_entry(
-									item, gl_entries, self.posting_date, provisional_account, reverse=1
+									item,
+									gl_entries,
+									self.posting_date,
+									provisional_account,
+									reverse=1,
+									item_amount=(min(item.qty, pr_qty) * pr_base_rate),
 								)
 
 					if not self.is_internal_transfer():
@@ -1266,6 +1279,10 @@ class PurchaseInvoice(BuyingController):
 
 		self.check_on_hold_or_closed_status()
 
+		if self.is_return and not self.update_billed_amount_in_purchase_order:
+			# NOTE status updating bypassed for is_return
+			self.status_updater = []
+
 		self.update_status_updater_args()
 		self.update_prevdoc_status()
 
@@ -1359,6 +1376,9 @@ class PurchaseInvoice(BuyingController):
 					frappe.throw(_("Supplier Invoice No exists in Purchase Invoice {0}").format(pi))
 
 	def update_billing_status_in_pr(self, update_modified=True):
+		if self.is_return and not self.update_billed_amount_in_purchase_receipt:
+			return
+
 		updated_pr = []
 		po_details = []
 
@@ -1540,12 +1560,8 @@ class PurchaseInvoice(BuyingController):
 				elif outstanding_amount > 0 and getdate(self.due_date) >= getdate():
 					self.status = "Unpaid"
 				# Check if outstanding amount is 0 due to debit note issued against invoice
-				elif (
-					outstanding_amount <= 0
-					and self.is_return == 0
-					and frappe.db.get_value(
-						"Purchase Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
-					)
+				elif self.is_return == 0 and frappe.db.get_value(
+					"Purchase Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
 				):
 					self.status = "Debit Note Issued"
 				elif self.is_return == 1:

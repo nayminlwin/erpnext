@@ -11,23 +11,8 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 		super.setup(doc);
 	}
 	company() {
+		super.company();
 		erpnext.accounts.dimensions.update_dimension(this.frm, this.frm.doctype);
-
-		let me = this;
-		if (this.frm.doc.company) {
-			frappe.call({
-				method:
-					"erpnext.accounts.party.get_party_account",
-				args: {
-					party_type: 'Customer',
-					party: this.frm.doc.customer,
-					company: this.frm.doc.company
-				},
-				callback: (response) => {
-					if (response) me.frm.set_value("debit_to", response.message);
-				},
-			});
-		}
 	}
 	onload() {
 		var me = this;
@@ -91,8 +76,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 
 		if(doc.update_stock) this.show_stock_ledger();
 
-		if (doc.docstatus == 1 && doc.outstanding_amount!=0
-			&& !(cint(doc.is_return) && doc.return_against)) {
+		if (doc.docstatus == 1 && doc.outstanding_amount!=0) {
 			this.frm.add_custom_button(
 				__('Payment'),
 				() => this.make_payment_entry(),

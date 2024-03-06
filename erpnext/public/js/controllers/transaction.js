@@ -140,7 +140,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		}
 
 		if(this.frm.fields_dict["items"]) {
-			this["items_remove"] = this.calculate_net_weight;
+			this["items_remove"] = this.process_item_removal;
 		}
 
 		if(this.frm.fields_dict["recurring_print_format"]) {
@@ -746,14 +746,14 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				}
 				let selling_doctypes_for_tc = ["Sales Invoice", "Quotation", "Sales Order", "Delivery Note"];
 				if (company_doc.default_selling_terms && frappe.meta.has_field(me.frm.doc.doctype, "tc_name") &&
-				selling_doctypes_for_tc.indexOf(me.frm.doc.doctype) != -1) {
+				selling_doctypes_for_tc.includes(me.frm.doc.doctype) && !me.frm.doc.tc_name) {
 					me.frm.set_value("tc_name", company_doc.default_selling_terms);
 				}
 				let buying_doctypes_for_tc = ["Request for Quotation", "Supplier Quotation", "Purchase Order",
 					"Material Request", "Purchase Receipt"];
 				// Purchase Invoice is excluded as per issue #3345
 				if (company_doc.default_buying_terms && frappe.meta.has_field(me.frm.doc.doctype, "tc_name") &&
-				buying_doctypes_for_tc.indexOf(me.frm.doc.doctype) != -1) {
+				buying_doctypes_for_tc.includes(me.frm.doc.doctype) && !me.frm.doc.tc_name) {
 					me.frm.set_value("tc_name", company_doc.default_buying_terms);
 				}
 
@@ -1190,6 +1190,11 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				}
 			})
 		}
+	}
+
+	process_item_removal() {
+		this.frm.trigger("calculate_taxes_and_totals");
+		this.frm.trigger("calculate_net_weight");
 	}
 
 	calculate_net_weight(){
