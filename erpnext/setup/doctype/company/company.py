@@ -89,6 +89,7 @@ class Company(NestedSet):
 			["Default Income Account", "default_income_account"],
 			["Stock Received But Not Billed Account", "stock_received_but_not_billed"],
 			["Stock Adjustment Account", "stock_adjustment_account"],
+			["Expense Included In Valuation Account", "expenses_included_in_valuation"],
 		]
 
 		for account in accounts:
@@ -377,6 +378,7 @@ class Company(NestedSet):
 			"depreciation_expense_account": "Depreciation",
 			"capital_work_in_progress_account": "Capital Work in Progress",
 			"asset_received_but_not_billed": "Asset Received But Not Billed",
+			"expenses_included_in_asset_valuation": "Expenses Included In Asset Valuation",
 			"default_expense_account": "Cost of Goods Sold",
 		}
 
@@ -386,6 +388,7 @@ class Company(NestedSet):
 					"stock_received_but_not_billed": "Stock Received But Not Billed",
 					"default_inventory_account": "Stock",
 					"stock_adjustment_account": "Stock Adjustment",
+					"expenses_included_in_valuation": "Expenses Included In Valuation",
 				}
 			)
 

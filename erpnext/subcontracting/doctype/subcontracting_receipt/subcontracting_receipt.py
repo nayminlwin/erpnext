@@ -311,6 +311,7 @@ class SubcontractingReceipt(SubcontractingController):
 		return process_gl_map(gl_entries)
 
 	def make_item_gl_entries(self, gl_entries, warehouse_account=None):
+		expenses_included_in_valuation = self.get_company_default("expenses_included_in_valuation")
 		warehouse_with_no_account = []
 
 		for item in self.items:
@@ -403,9 +404,12 @@ class SubcontractingReceipt(SubcontractingController):
 						)
 
 					if divisional_loss := flt(item.amount - stock_value_diff, item.precision("amount")):
-						loss_account = self.get_company_default(
-							"stock_adjustment_account", ignore_validation=True
-						)
+						if self.is_return:
+							loss_account = expenses_included_in_valuation
+						else:
+							loss_account = self.get_company_default(
+								"stock_adjustment_account", ignore_validation=True
+							)
 
 						# Loss Account (Credit)
 						self.add_gl_entry(
