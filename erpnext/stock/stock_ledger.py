@@ -184,7 +184,7 @@ class update_entries_after(object):
 
 		# update current sle
 		sle.qty_after_transaction = self.qty_after_transaction
-		sle.valuation_rate = self.valuation_rate
+		sle.valuation_rate = flt(self.valuation_rate, 6)
 		sle.stock_value = self.stock_value
 		sle.stock_queue = json.dumps(self.stock_queue)
 		sle.stock_value_difference = stock_value_difference
