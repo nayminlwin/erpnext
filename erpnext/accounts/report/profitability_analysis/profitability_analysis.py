@@ -27,7 +27,8 @@ def execute(filters=None):
 	accounts = get_accounts_data(based_on, filters.get("company"))
 	data = get_data(accounts, filters, based_on)
 	columns = get_columns(filters)
-	return columns, data
+	chart = get_chart_data(accounts, data)
+	return columns, data, None, chart
 
 
 def get_accounts_data(based_on, company):
@@ -232,3 +233,21 @@ def set_gl_entries_by_account(
 		gl_entries_by_account.setdefault(entry.based_on, []).append(entry)
 
 	return gl_entries_by_account
+
+def get_chart_data(accounts, data):
+	child_accounts = [a for a in accounts if a["rgt"] - a["lft"] == 1]
+	child_acc_names = [a["name"] for a in child_accounts]
+	child_data = [row for row in data if "account" in row and row["account"] in child_acc_names]
+
+	datasets = [
+		{"name": _("Income"), "values": [r["income"] for r in child_data]},
+		{"name": _("Expense"), "values": [r["expense"] for r in child_data]},
+		{"name": _("Net Profit/Loss"), "values": [r["income"] - r["expense"] for r in child_data]}
+	]
+
+	chart = {"data": {"labels": child_acc_names, "datasets": datasets}}
+	chart["type"] = "bar"
+	chart["fieldtype"] = "Currency"
+
+	return chart
+
