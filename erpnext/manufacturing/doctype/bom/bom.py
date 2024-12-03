@@ -742,11 +742,8 @@ class BOM(WebsiteGenerator):
 		base_total_rm_cost = 0
 
 		for d in self.get("items"):
-			if not d.is_stock_item and self.rm_cost_as_per == "Valuation Rate":
-				continue
-
 			old_rate = d.rate
-			if not self.bom_creator:
+			if not self.bom_creator and d.is_stock_item:
 				d.rate = self.get_rm_rate(
 					{
 						"company": self.company,
@@ -967,6 +964,13 @@ class BOM(WebsiteGenerator):
 					d.description = frappe.db.get_value("Operation", d.operation, "description")
 				if not d.batch_size or d.batch_size <= 0:
 					d.batch_size = 1
+
+				if not d.workstation and not d.workstation_type:
+					frappe.throw(
+						_(
+							"Row {0}: Workstation or Workstation Type is mandatory for an operation {1}"
+						).format(d.idx, d.operation)
+					)
 
 	def get_tree_representation(self) -> BOMTree:
 		"""Get a complete tree representation preserving order of child items."""

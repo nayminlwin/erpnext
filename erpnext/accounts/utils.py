@@ -474,10 +474,14 @@ def reconcile_against_document(
 		doc = frappe.get_doc(voucher_type, voucher_no)
 		frappe.flags.ignore_party_validation = True
 
-		# For payments with `Advance` in separate account feature enabled, only new ledger entries are posted for each reference.
-		# No need to cancel/delete payment ledger entries
+		# When Advance is allocated from an Order to an Invoice
+		# whole ledger must be reposted
+		repost_whole_ledger = any([x.voucher_detail_no for x in entries])
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			doc.make_advance_gl_entries(cancel=1)
+			if repost_whole_ledger:
+				doc.make_gl_entries(cancel=1)
+			else:
+				doc.make_advance_gl_entries(cancel=1)
 		else:
 			_delete_pl_entries(voucher_type, voucher_no)
 
@@ -511,9 +515,14 @@ def reconcile_against_document(
 		doc = frappe.get_doc(entry.voucher_type, entry.voucher_no)
 
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			# both ledgers must be posted to for `Advance` in separate account feature
-			# TODO: find a more efficient way post only for the new linked vouchers
-			doc.make_advance_gl_entries()
+			# When Advance is allocated from an Order to an Invoice
+			# whole ledger must be reposted
+			if repost_whole_ledger:
+				doc.make_gl_entries()
+			else:
+				# both ledgers must be posted to for `Advance` in separate account feature
+				# TODO: find a more efficient way post only for the new linked vouchers
+				doc.make_advance_gl_entries()
 		else:
 			gl_map = doc.build_gl_map()
 			# Make sure there is no overallocation
@@ -620,6 +629,16 @@ def update_reference_in_journal_entry(d, journal_entry, do_not_save=False):
 	update_advance_paid = []
 	if jv_detail.get("reference_type") in ["Sales Order", "Purchase Order"]:
 		update_advance_paid.append((jv_detail.reference_type, jv_detail.reference_name))
+
+	rev_dr_or_cr = (
+		"debit_in_account_currency"
+		if d["dr_or_cr"] == "credit_in_account_currency"
+		else "credit_in_account_currency"
+	)
+	if jv_detail.get(rev_dr_or_cr):
+		d["dr_or_cr"] = rev_dr_or_cr
+		d["allocated_amount"] = d["allocated_amount"] * -1
+		d["unadjusted_amount"] = d["unadjusted_amount"] * -1
 
 	if flt(d["unadjusted_amount"]) - flt(d["allocated_amount"]) != 0:
 		# adjust the unreconciled balance
@@ -1538,12 +1557,16 @@ def compare_existing_and_expected_gle(existing_gle, expected_gle, precision):
 	return matched
 
 
-def get_stock_accounts(company, voucher_type=None, voucher_no=None):
+def get_stock_accounts(company, voucher_type=None, voucher_no=None, accounts=None):
 	stock_accounts = [
 		d.name
 		for d in frappe.db.get_all("Account", {"account_type": "Stock", "company": company, "is_group": 0})
 	]
-	if voucher_type and voucher_no:
+
+	if accounts:
+		stock_accounts = [row.account for row in accounts if row.account in stock_accounts]
+
+	elif voucher_type and voucher_no:
 		if voucher_type == "Journal Entry":
 			stock_accounts = [
 				d.account
@@ -1956,6 +1979,7 @@ class QueryPaymentLedger:
 				ple.cost_center.as_("cost_center"),
 				Sum(ple.amount).as_("amount"),
 				Sum(ple.amount_in_account_currency).as_("amount_in_account_currency"),
+				ple.remarks,
 			)
 			.where(ple.delinked == 0)
 			.where(Criterion.all(filter_on_voucher_no))
@@ -2018,6 +2042,7 @@ class QueryPaymentLedger:
 				Table("vouchers").due_date,
 				Table("vouchers").currency,
 				Table("vouchers").cost_center.as_("cost_center"),
+				Table("vouchers").remarks,
 			)
 			.where(Criterion.all(filter_on_outstanding_amount))
 		)

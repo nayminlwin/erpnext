@@ -547,6 +547,8 @@ erpnext.PointOfSale.Controller = class {
 
 	async on_cart_update(args) {
 		frappe.dom.freeze();
+		if (this.frm.doc.set_warehouse != this.settings.warehouse)
+			this.frm.doc.set_warehouse = this.settings.warehouse;
 		let item_row = undefined;
 		try {
 			let { field, value, item } = args;
@@ -554,7 +556,7 @@ erpnext.PointOfSale.Controller = class {
 			const item_row_exists = !$.isEmptyObject(item_row);
 
 			const from_selector = field === "qty" && value === "+1";
-			if (from_selector) value = flt(item_row.stock_qty) + flt(value);
+			if (from_selector) value = flt(item_row.qty) + flt(value);
 
 			if (item_row_exists) {
 				if (field === "qty") value = flt(value);
@@ -685,7 +687,7 @@ erpnext.PointOfSale.Controller = class {
 		const is_stock_item = resp[1];
 
 		frappe.dom.unfreeze();
-		const bold_uom = item_row.uom.bold();
+		const bold_uom = item_row.stock_uom.bold();
 		const bold_item_code = item_row.item_code.bold();
 		const bold_warehouse = warehouse.bold();
 		const bold_available_qty = available_qty.toString().bold();

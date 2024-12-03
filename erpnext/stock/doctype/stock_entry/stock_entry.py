@@ -795,9 +795,6 @@ class StockEntry(StockController):
 		self.set_total_incoming_outgoing_value()
 		self.set_total_amount()
 
-		if not reset_outgoing_rate:
-			self.set_serial_and_batch_bundle()
-
 	def set_basic_rate(self, reset_outgoing_rate=True, raise_error_if_no_rate=True):
 		"""
 		Set rate for outgoing, scrapped and finished items
@@ -1309,10 +1306,10 @@ class StockEntry(StockController):
 		3. Check FG Item and Qty against WO if present (mfg)
 		"""
 		production_item, wo_qty, finished_items = None, 0, []
-
-		wo_details = frappe.db.get_value("Work Order", self.work_order, ["production_item", "qty"])
-		if wo_details:
-			production_item, wo_qty = wo_details
+		if self.work_order:
+			wo_details = frappe.db.get_value("Work Order", self.work_order, ["production_item", "qty"])
+			if wo_details:
+				production_item, wo_qty = wo_details
 
 		for d in self.get("items"):
 			if d.is_finished_item:

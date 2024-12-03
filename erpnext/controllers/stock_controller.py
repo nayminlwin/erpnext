@@ -62,6 +62,21 @@ class StockController(AccountsController):
 		self.set_rate_of_stock_uom()
 		self.validate_internal_transfer()
 		self.validate_putaway_capacity()
+		self.reset_conversion_factor()
+
+	def reset_conversion_factor(self):
+		for row in self.get("items"):
+			if row.uom != row.stock_uom:
+				continue
+
+			if row.conversion_factor != 1.0:
+				row.conversion_factor = 1.0
+				frappe.msgprint(
+					_(
+						"Conversion factor for item {0} has been reset to 1.0 as the uom {1} is same as stock uom {2}."
+					).format(bold(row.item_code), bold(row.uom), bold(row.stock_uom)),
+					alert=True,
+				)
 
 	def validate_items_exist(self):
 		if not self.get("items"):
@@ -317,6 +332,11 @@ class StockController(AccountsController):
 						"serial_no": "",
 					}
 				)
+
+				if self.doctype in ["Sales Invoice", "Delivery Note"]:
+					row.db_set(
+						"incoming_rate", frappe.db.get_value("Serial and Batch Bundle", bundle, "avg_rate")
+					)
 
 	def get_reference_ids(self, table_name, qty_field=None, bundle_field=None) -> tuple[str, list[str]]:
 		field = {
@@ -818,6 +838,15 @@ class StockController(AccountsController):
 			if not dimension:
 				continue
 
+			if (
+				self.doctype in ["Purchase Invoice", "Purchase Receipt"]
+				and row.get("rejected_warehouse")
+				and sl_dict.get("warehouse") == row.get("rejected_warehouse")
+			):
+				fieldname = f"rejected_{dimension.source_fieldname}"
+				sl_dict[dimension.target_fieldname] = row.get(fieldname)
+				continue
+
 			if self.doctype in [
 				"Purchase Invoice",
 				"Purchase Receipt",
@@ -978,11 +1007,13 @@ class StockController(AccountsController):
 	def validate_qi_presence(self, row):
 		"""Check if QI is present on row level. Warn on save and stop on submit if missing."""
 		if not row.quality_inspection:
-			msg = f"Row #{row.idx}: Quality Inspection is required for Item {frappe.bold(row.item_code)}"
+			msg = _("Row #{0}: Quality Inspection is required for Item {1}").format(
+				row.idx, frappe.bold(row.item_code)
+			)
 			if self.docstatus == 1:
-				frappe.throw(_(msg), title=_("Inspection Required"), exc=QualityInspectionRequiredError)
+				frappe.throw(msg, title=_("Inspection Required"), exc=QualityInspectionRequiredError)
 			else:
-				frappe.msgprint(_(msg), title=_("Inspection Required"), indicator="blue")
+				frappe.msgprint(msg, title=_("Inspection Required"), indicator="blue")
 
 	def validate_qi_submission(self, row):
 		"""Check if QI is submitted on row level, during submission"""
@@ -991,11 +1022,13 @@ class StockController(AccountsController):
 
 		if not qa_docstatus == 1:
 			link = frappe.utils.get_link_to_form("Quality Inspection", row.quality_inspection)
-			msg = f"Row #{row.idx}: Quality Inspection {link} is not submitted for the item: {row.item_code}"
+			msg = _("Row #{0}: Quality Inspection {1} is not submitted for the item: {2}").format(
+				row.idx, link, row.item_code
+			)
 			if action == "Stop":
-				frappe.throw(_(msg), title=_("Inspection Submission"), exc=QualityInspectionNotSubmittedError)
+				frappe.throw(msg, title=_("Inspection Submission"), exc=QualityInspectionNotSubmittedError)
 			else:
-				frappe.msgprint(_(msg), alert=True, indicator="orange")
+				frappe.msgprint(msg, alert=True, indicator="orange")
 
 	def validate_qi_rejection(self, row):
 		"""Check if QI is rejected on row level, during submission"""
@@ -1004,11 +1037,13 @@ class StockController(AccountsController):
 
 		if qa_status == "Rejected":
 			link = frappe.utils.get_link_to_form("Quality Inspection", row.quality_inspection)
-			msg = f"Row #{row.idx}: Quality Inspection {link} was rejected for item {row.item_code}"
+			msg = _("Row #{0}: Quality Inspection {1} was rejected for item {2}").format(
+				row.idx, link, row.item_code
+			)
 			if action == "Stop":
-				frappe.throw(_(msg), title=_("Inspection Rejected"), exc=QualityInspectionRejectedError)
+				frappe.throw(msg, title=_("Inspection Rejected"), exc=QualityInspectionRejectedError)
 			else:
-				frappe.msgprint(_(msg), alert=True, indicator="orange")
+				frappe.msgprint(msg, alert=True, indicator="orange")
 
 	def update_blanket_order(self):
 		blanket_orders = list(set([d.blanket_order for d in self.items if d.blanket_order]))

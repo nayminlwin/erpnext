@@ -297,8 +297,11 @@ class SalesInvoice(SellingController):
 			self.update_current_stock()
 			self.validate_delivery_note()
 
+		is_deferred_invoice = any(d.get("enable_deferred_revenue") for d in self.get("items"))
+
 		# validate service stop date to lie in between start and end date
-		validate_service_stop_date(self)
+		if is_deferred_invoice:
+			validate_service_stop_date(self)
 
 		if not self.is_opening:
 			self.is_opening = "No"
@@ -1359,14 +1362,15 @@ class SalesInvoice(SellingController):
 
 					else:
 						if asset.calculate_depreciation:
-							notes = _(
-								"This schedule was created when Asset {0} was sold through Sales Invoice {1}."
-							).format(
-								get_link_to_form(asset.doctype, asset.name),
-								get_link_to_form(self.doctype, self.get("name")),
-							)
-							depreciate_asset(asset, self.posting_date, notes)
-							asset.reload()
+							if not asset.status == "Fully Depreciated":
+								notes = _(
+									"This schedule was created when Asset {0} was sold through Sales Invoice {1}."
+								).format(
+									get_link_to_form(asset.doctype, asset.name),
+									get_link_to_form(self.doctype, self.get("name")),
+								)
+								depreciate_asset(asset, self.posting_date, notes)
+								asset.reload()
 
 						fixed_asset_gl_entries = get_gl_entries_on_asset_disposal(
 							asset,
@@ -1629,9 +1633,28 @@ class SalesInvoice(SellingController):
 			and self.base_rounding_adjustment
 			and not self.is_internal_transfer()
 		):
-			round_off_account, round_off_cost_center = get_round_off_account_and_cost_center(
+			(
+				round_off_account,
+				round_off_cost_center,
+				round_off_for_opening,
+			) = get_round_off_account_and_cost_center(
 				self.company, "Sales Invoice", self.name, self.use_company_roundoff_cost_center
 			)
+
+			if self.is_opening == "Yes" and self.rounding_adjustment:
+				if not round_off_for_opening:
+					frappe.throw(
+						_(
+							"Opening Invoice has rounding adjustment of {0}.<br><br> '{1}' account is required to post these values. Please set it in Company: {2}.<br><br> Or, '{3}' can be enabled to not post any rounding adjustment."
+						).format(
+							frappe.bold(self.rounding_adjustment),
+							frappe.bold("Round Off for Opening"),
+							get_link_to_form("Company", self.company),
+							frappe.bold("Disable Rounded Total"),
+						)
+					)
+				else:
+					round_off_account = round_off_for_opening
 
 			gl_entries.append(
 				self.get_gl_dict(
@@ -1730,9 +1753,11 @@ class SalesInvoice(SellingController):
 				)
 
 	def update_project(self):
-		if self.project:
-			project = frappe.get_doc("Project", self.project)
+		unique_projects = list(set([d.project for d in self.get("items") if d.project]))
+		for p in unique_projects:
+			project = frappe.get_doc("Project", p)
 			project.update_billed_amount()
+			project.calculate_gross_margin()
 			project.db_update()
 
 	def verify_payment_amount_is_positive(self):
