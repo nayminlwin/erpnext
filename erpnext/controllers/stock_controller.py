@@ -30,7 +30,6 @@ from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle impor
 )
 from erpnext.stock.stock_ledger import get_items_to_be_repost
 
-
 class QualityInspectionRequiredError(frappe.ValidationError):
 	pass
 

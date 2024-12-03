@@ -27,7 +27,7 @@ class MaterialRequestItem(Document):
 		expense_account: DF.Link | None
 		from_warehouse: DF.Link | None
 		image: DF.AttachImage | None
-		item_code: DF.Link
+		item_code: DF.Link | None
 		item_group: DF.Link | None
 		item_name: DF.Data | None
 		job_card_item: DF.Data | None

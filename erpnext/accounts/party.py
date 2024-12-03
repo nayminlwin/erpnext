@@ -407,12 +407,12 @@ def get_party_account(party_type, party=None, company=None, include_advance=Fals
 		)
 		account = frappe.get_cached_value("Company", company, default_account_name)
 
-	existing_gle_currency = get_party_gle_currency(party_type, party, company)
-	if existing_gle_currency:
-		if account:
-			account_currency = frappe.get_cached_value("Account", account, "account_currency")
-		if (account and account_currency != existing_gle_currency) or not account:
-			account = get_party_gle_account(party_type, party, company)
+	# existing_gle_currency = get_party_gle_currency(party_type, party, company)
+	# if existing_gle_currency:
+	# 	if account:
+	# 		account_currency = frappe.get_cached_value("Account", account, "account_currency")
+	# 	if (account and account_currency != existing_gle_currency) or not account:
+	# 		account = get_party_gle_account(party_type, party, company)
 
 	if include_advance and party_type in ["Customer", "Supplier", "Student"]:
 		advance_account = get_party_advance_account(party_type, party, company)
@@ -545,7 +545,7 @@ def validate_party_accounts(doc):
 		else:
 			company_default_currency = frappe.get_cached_value("Company", account.company, "default_currency")
 
-		validate_party_gle_currency(doc.doctype, doc.name, account.company, party_account_currency)
+		# validate_party_gle_currency(doc.doctype, doc.name, account.company, party_account_currency)
 
 		if doc.get("default_currency") and party_account_currency and company_default_currency:
 			if (

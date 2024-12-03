@@ -284,8 +284,8 @@ class GLEntry(Document):
 				InvalidAccountCurrency,
 			)
 
-		if self.party_type and self.party:
-			validate_party_gle_currency(self.party_type, self.party, self.company, self.account_currency)
+		# if self.party_type and self.party:
+		# 	validate_party_gle_currency(self.party_type, self.party, self.company, self.account_currency)
 
 	def validate_and_set_fiscal_year(self):
 		if not self.fiscal_year:

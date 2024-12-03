@@ -43,7 +43,7 @@ class PurchaseReceiptItem(Document):
 		include_exploded_items: DF.Check
 		is_fixed_asset: DF.Check
 		is_free_item: DF.Check
-		item_code: DF.Link
+		item_code: DF.Link | None
 		item_group: DF.Link | None
 		item_name: DF.Data
 		item_tax_amount: DF.Currency

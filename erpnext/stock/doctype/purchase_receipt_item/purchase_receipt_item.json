@@ -156,7 +156,6 @@
    "oldfieldtype": "Link",
    "options": "Item",
    "print_width": "100px",
-   "reqd": 1,
    "search_index": 1,
    "width": "100px"
   },
@@ -1140,7 +1139,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-07-19 12:14:21.521466",
+ "modified": "2024-12-03 14:42:29.269397",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt Item",

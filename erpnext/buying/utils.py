@@ -51,12 +51,13 @@ def validate_for_items(doc) -> None:
 				continue
 			frappe.throw(_("Please enter quantity for Item {0}").format(d.item_code))
 
-		set_stock_levels(row=d)  # update with latest quantities
-		item = validate_item_and_get_basic_data(row=d)
-		validate_stock_item_warehouse(row=d, item=item)
-		validate_end_of_life(d.item_code, item.end_of_life, item.disabled)
+		if d.item_code:
+			set_stock_levels(row=d)  # update with latest quantities
+			item = validate_item_and_get_basic_data(row=d)
+			validate_stock_item_warehouse(row=d, item=item)
+			validate_end_of_life(d.item_code, item.end_of_life, item.disabled)
 
-		items.append(cstr(d.item_code))
+			items.append(cstr(d.item_code))
 
 	if (
 		items

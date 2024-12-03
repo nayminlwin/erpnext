@@ -478,12 +478,44 @@ frappe.ui.form.on("Material Request", {
 });
 
 frappe.ui.form.on("Material Request Item", {
+	items_add: function (frm, doctype, name) {
+		const item = locals[doctype][name];
+		if (item.idx > 1) {
+			const prev_item = frm.doc.items[item.idx - 2];
+			if (!item.expense_account) {
+				item.expense_account = prev_item.expense_account;
+				frappe.model.set_value(doctype, name, "expense_account", item.expense_account);
+				refresh_field("expense_account", item.name, item.parentfield);
+			}
+			if (!prev_item.item_code) {
+				item.item_group = prev_item.item_group;
+				item.uom = prev_item.uom;
+				frappe.model.set_value(doctype, name, "item_group", item.item_group);
+				frappe.model.set_value(doctype, name, "uom", item.uom);
+				refresh_field("item_group", item.name, item.parentfield);
+				refresh_field("uom", item.name, item.parentfield);
+				frm.trigger("uom", doctype, name);
+			}
+		}
+	},
 	qty: function (frm, doctype, name) {
 		const item = locals[doctype][name];
 		if (flt(item.qty) < flt(item.min_order_qty)) {
 			frappe.msgprint(__("Warning: Material Requested Qty is less than Minimum Order Qty"));
 		}
 		frm.events.get_item_data(frm, item, false);
+	},
+
+	uom: function(_frm, doctype, name) {
+		const item = locals[doctype][name];
+		if (!item.item_code) {
+			item.stock_uom = item.uom;
+			item.conversion_factor = 1;
+			frappe.model.set_value(doctype, name, "stock_uom", item.stock_uom);
+			frappe.model.set_value(doctype, name, "conversion_factor", item.conversion_factor);
+			refresh_field("stock_uom", item.name, item.parentfield);
+			refresh_field("conversion_factor", item.name, item.parentfield);
+		}
 	},
 
 	from_warehouse: function (frm, doctype, name) {
