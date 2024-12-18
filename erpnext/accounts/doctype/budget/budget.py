@@ -394,7 +394,7 @@ def get_actions(args, budget):
 
 
 def get_requested_amount(args):
-	item_code = args.get("item_code")
+	# item_code = args.get("item_code")
 	condition = get_other_condition(args, "Material Request")
 
 	data = frappe.db.sql(
@@ -402,7 +402,7 @@ def get_requested_amount(args):
 		from `tabMaterial Request Item` child, `tabMaterial Request` parent where parent.name = child.parent and
 		child.item_code = %s and parent.docstatus = 1 and child.stock_qty > child.ordered_qty and {} and
 		parent.material_request_type = 'Purchase' and parent.status != 'Stopped'""".format(condition),
-		item_code,
+		args.get("name"),
 		as_list=1,
 	)
 
@@ -410,15 +410,15 @@ def get_requested_amount(args):
 
 
 def get_ordered_amount(args):
-	item_code = args.get("item_code")
+	# item_code = args.get("item_code")
 	condition = get_other_condition(args, "Purchase Order")
 
 	data = frappe.db.sql(
 		f""" select ifnull(sum(child.amount - child.billed_amt), 0) as amount
 		from `tabPurchase Order Item` child, `tabPurchase Order` parent where
-		parent.name = child.parent and child.item_code = %s and parent.docstatus = 1 and child.amount > child.billed_amt
+		parent.name = child.parent and child.name = %s and parent.docstatus = 1 and child.amount > child.billed_amt
 		and parent.status != 'Closed' and {condition}""",
-		item_code,
+		args.get("name"),
 		as_list=1,
 	)
 

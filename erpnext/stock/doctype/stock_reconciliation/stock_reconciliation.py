@@ -490,23 +490,26 @@ class StockReconciliation(StockController):
 			return _("Row # {0}:").format(row_num + 1) + " " + msg
 
 		self.validation_messages = []
-		item_warehouse_combinations = []
+		item_warehouse_dimension_combinations = []
 
 		default_currency = frappe.db.get_default("currency")
 
+		dimensions = get_inventory_dimensions()
+		fields = ["serial_no", "batch_no"] + [d.get("fieldname") for d in dimensions]
 		for row_num, row in enumerate(self.items):
 			# find duplicates
 			key = [row.item_code, row.warehouse]
-			for field in ["serial_no", "batch_no"]:
+			for field in fields:
 				if row.get(field):
 					key.append(row.get(field))
+			print(key)
 
-			if key in item_warehouse_combinations:
+			if key in item_warehouse_dimension_combinations:
 				self.validation_messages.append(
 					_get_msg(row_num, _("Same item and warehouse combination already entered."))
 				)
 			else:
-				item_warehouse_combinations.append(key)
+				item_warehouse_dimension_combinations.append(key)
 
 			self.validate_item(row.item_code, row)
 
