@@ -589,7 +589,7 @@ def get_allowance_for(
 
 	qty_allowance, over_billing_allowance = frappe.get_cached_value(
 		"Item", item_code, ["over_delivery_receipt_allowance", "over_billing_allowance"]
-	) if item_code else None, None
+	) if item_code else [None, None]
 
 	if qty_or_amount == "qty" and not qty_allowance:
 		if global_qty_allowance is None:
