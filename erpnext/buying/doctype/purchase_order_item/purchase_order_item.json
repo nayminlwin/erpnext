@@ -561,13 +561,11 @@
   {
    "fieldname": "item_group",
    "fieldtype": "Link",
-   "hidden": 1,
    "label": "Item Group",
    "oldfieldname": "item_group",
    "oldfieldtype": "Link",
    "options": "Item Group",
-   "print_hide": 1,
-   "read_only": 1
+   "print_hide": 1
   },
   {
    "fieldname": "brand",
@@ -914,7 +912,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-12-03 14:42:12.565246",
+ "modified": "2024-12-23 16:27:31.378156",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order Item",

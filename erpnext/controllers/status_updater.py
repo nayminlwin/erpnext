@@ -249,7 +249,7 @@ class StatusUpdater(Document):
 
 					# get all qty where qty > target_field
 					item = frappe.db.sql(
-						"""select item_code, `{target_ref_field}`,
+						"""select item_code, item_name, `{target_ref_field}`,
 						`{target_field}`, parenttype, parent from `tab{target_dt}`
 						where `{target_ref_field}` < `{target_field}`
 						and name=%s and docstatus=1""".format(**args),
@@ -345,7 +345,7 @@ class StatusUpdater(Document):
 				frappe.bold(item["reduce_by"]),
 				frappe.bold(_(args.get("target_dt"))),
 				frappe.bold(_(self.doctype)),
-				frappe.bold(item.get("item_code")),
+				frappe.bold(item.get("item_code") or item.get("item_name")),
 			)
 			+ "<br><br>"
 			+ action_msg,
