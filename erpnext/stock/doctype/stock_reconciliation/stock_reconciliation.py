@@ -502,7 +502,6 @@ class StockReconciliation(StockController):
 			for field in fields:
 				if row.get(field):
 					key.append(row.get(field))
-			print(key)
 
 			if key in item_warehouse_dimension_combinations:
 				self.validation_messages.append(
