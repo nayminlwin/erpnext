@@ -27,6 +27,7 @@ class AssetValueAdjustment(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		adjustment_type: DF.Literal["Revalue", "Depreciate"]
 		amended_from: DF.Link | None
 		asset: DF.Link
 		asset_category: DF.ReadOnly | None
@@ -35,6 +36,7 @@ class AssetValueAdjustment(Document):
 		current_asset_value: DF.Currency
 		date: DF.Date
 		difference_amount: DF.Currency
+		expense_account: DF.Link | None
 		finance_book: DF.Link | None
 		journal_entry: DF.Link | None
 		new_asset_value: DF.Currency
@@ -46,8 +48,11 @@ class AssetValueAdjustment(Document):
 		self.set_difference_amount()
 
 	def on_submit(self):
-		self.make_depreciation_entry()
 		self.update_asset(self.new_asset_value)
+		if self.adjustment_type == 'Depreciate':
+			self.make_depreciation_entry()
+		if self.adjustment_type == 'Revalue':
+			self.make_revalue_entry()
 		add_asset_activity(
 			self.asset,
 			_("Asset's value adjusted after submission of Asset Value Adjustment {0}").format(
@@ -56,7 +61,8 @@ class AssetValueAdjustment(Document):
 		)
 
 	def on_cancel(self):
-		frappe.get_doc("Journal Entry", self.journal_entry).cancel()
+		if self.journal_entry:
+			frappe.get_doc("Journal Entry", self.journal_entry).cancel()
 		self.update_asset()
 		add_asset_activity(
 			self.asset,
@@ -81,6 +87,59 @@ class AssetValueAdjustment(Document):
 	def set_current_asset_value(self):
 		if not self.current_asset_value and self.asset:
 			self.current_asset_value = get_asset_value_after_depreciation(self.asset, self.finance_book)
+
+	def make_revalue_entry(self):
+		if not self.expense_account:
+			frappe.throw(_("Expense Account is required for asset revaluation"))
+
+		asset = frappe.get_doc("Asset", self.asset)
+		(asset_account, _accdep, _dep) = \
+			get_depreciation_accounts(asset.asset_category, asset.company)
+
+		je = frappe.new_doc("Journal Entry")
+		je.posting_date = self.date
+		je.company = self.company
+		je.remark = f"Revalue Entry against {self.asset} worth {self.difference_amount}"
+		je.finance_book = self.finance_book
+
+		credit_entry = {
+			"account": asset_account,
+			"credit_in_account_currency": self.difference_amount,
+			"cost_center": self.cost_center,
+		}
+
+		debit_entry = {
+			"account": self.expense_account,
+			"debit_in_account_currency": self.difference_amount,
+			"cost_center": self.cost_center,
+		}
+
+		accounting_dimensions = get_checks_for_pl_and_bs_accounts()
+
+		for dimension in accounting_dimensions:
+			if dimension.get("mandatory_for_bs"):
+				credit_entry.update(
+					{
+						dimension["fieldname"]: self.get(dimension["fieldname"])
+						or dimension.get("default_dimension")
+					}
+				)
+
+			if dimension.get("mandatory_for_pl"):
+				debit_entry.update(
+					{
+						dimension["fieldname"]: self.get(dimension["fieldname"])
+						or dimension.get("default_dimension")
+					}
+				)
+
+		je.append("accounts", credit_entry)
+		je.append("accounts", debit_entry)
+
+		je.flags.ignore_permissions = True
+		je.submit()
+
+		self.db_set("journal_entry", je.name)
 
 	def make_depreciation_entry(self):
 		asset = frappe.get_doc("Asset", self.asset)
@@ -147,6 +206,8 @@ class AssetValueAdjustment(Document):
 
 	def update_asset(self, asset_value=None):
 		asset = frappe.get_doc("Asset", self.asset)
+
+		asset.total_asset_cost = asset_value
 
 		if not asset.calculate_depreciation:
 			asset.value_after_depreciation = asset_value

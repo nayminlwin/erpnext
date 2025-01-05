@@ -22,6 +22,13 @@ frappe.ui.form.on("Asset Value Adjustment", {
 				},
 			};
 		});
+		frm.set_query("expense_account", function () {
+			return {
+				filters: {
+					company: frm.doc.company,
+				},
+			};
+		});
 	},
 
 	onload: function (frm) {

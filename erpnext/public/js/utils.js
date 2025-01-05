@@ -790,7 +790,8 @@ erpnext.utils.update_child_items = function (opts) {
 			}
 		},
 		update_items: function () {
-			const trans_items = this.get_values()["trans_items"].filter((item) => !!item.item_code);
+			// const trans_items = this.get_values()["trans_items"].filter((item) => !!item.item_code || !!item.item_name);
+			const trans_items = this.get_values()["trans_items"];
 			frappe.call({
 				method: "erpnext.controllers.accounts_controller.update_child_qty_rate",
 				freeze: true,

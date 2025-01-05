@@ -8,10 +8,12 @@
   "company",
   "asset",
   "asset_category",
+  "amended_from",
   "column_break_4",
   "date",
   "finance_book",
-  "amended_from",
+  "adjustment_type",
+  "expense_account",
   "value_details_section",
   "current_asset_value",
   "new_asset_value",
@@ -53,6 +55,7 @@
    "fieldname": "journal_entry",
    "fieldtype": "Link",
    "label": "Journal Entry",
+   "no_copy": 1,
    "options": "Journal Entry",
    "read_only": 1
   },
@@ -120,12 +123,28 @@
   {
    "fieldname": "column_break_11",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "Revalue",
+   "fieldname": "adjustment_type",
+   "fieldtype": "Select",
+   "label": "Adjustment Type",
+   "options": "Revalue\nDepreciate",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.adjustment_type==\"Revalue\"",
+   "fieldname": "expense_account",
+   "fieldtype": "Link",
+   "label": "Expense Account",
+   "mandatory_depends_on": "eval:doc.adjustment_type==\"Revalue\"",
+   "options": "Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-01-22 14:10:23.085181",
+ "modified": "2025-01-05 09:54:32.780480",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset Value Adjustment",
@@ -180,6 +199,7 @@
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "asset",
  "track_changes": 1
 }
