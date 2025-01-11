@@ -122,6 +122,7 @@ class ReceivablePayableReport:
 			voucher_type=ple.voucher_type,
 			voucher_no=ple.voucher_no,
 			party=ple.party,
+			account_head= ple.parent_account,
 			party_account=ple.account,
 			posting_date=ple.posting_date,
 			account_currency=ple.account_currency,
@@ -792,10 +793,15 @@ class ReceivablePayableReport:
 			self.qb_selection_filter.append(self.ple.posting_date.lte(self.filters.report_date))
 
 		ple = qb.DocType("Payment Ledger Entry")
+		acc = qb.DocType("Account")
+		sup = qb.DocType("Supplier")
 		query = (
 			qb.from_(ple)
+			.left_join(acc).on(ple.account == acc.name)
+			.left_join(sup).on(ple.party == sup.name)
 			.select(
 				ple.name,
+				acc.parent_account,
 				ple.account,
 				ple.voucher_type,
 				ple.voucher_no,
@@ -804,6 +810,7 @@ class ReceivablePayableReport:
 				ple.party_type,
 				ple.cost_center,
 				ple.party,
+				sup.supplier_name,
 				ple.posting_date,
 				ple.due_date,
 				ple.account_currency,
@@ -829,6 +836,8 @@ class ReceivablePayableReport:
 			query = query.orderby(self.ple.posting_date, self.ple.party)
 
 		self.ple_entries = query.run(as_dict=True)
+		# from pprint import pprint
+		# pprint(self.ple_entries)
 
 	def get_sales_invoices_or_customers_based_on_sales_person(self):
 		if self.filters.get("sales_person"):
@@ -1025,6 +1034,20 @@ class ReceivablePayableReport:
 			fieldname="party",
 			fieldtype="Dynamic Link",
 			options="party_type",
+			width=80,
+		)
+		self.add_column(
+			label=_("Party Name"),
+			fieldname="supplier_name",
+			fieldtype="Data",
+			width=180,
+		)
+
+		self.add_column(
+			label="Account Head",
+			fieldname="account_head",
+			fieldtype="Link",
+			options="Account",
 			width=180,
 		)
 		self.add_column(
@@ -1072,25 +1095,30 @@ class ReceivablePayableReport:
 			self.add_column(label=_("Bill No"), fieldname="bill_no", fieldtype="Data")
 			self.add_column(label=_("Bill Date"), fieldname="bill_date", fieldtype="Date")
 
+		self.add_column(
+			label=_("Currency"), fieldname="account_currency", fieldtype="Link", options="Currency", width=80
+		)
+
 		if self.filters.based_on_payment_terms:
 			self.add_column(label=_("Payment Term"), fieldname="payment_term", fieldtype="Data")
 			self.add_column(label=_("Invoice Grand Total"), fieldname="invoice_grand_total")
 
+		self.add_column(_("Invoiced in Account Currency"), fieldname="invoiced_in_account_currency", options="account_currency")
 		self.add_column(_("Invoiced Amount"), fieldname="invoiced")
-		self.add_column(_("Paid Amount"), fieldname="paid")
+		self.add_column(_("Paid in Account Currency"), fieldname="paid_in_account_currency", options="account_currency")
+		self.add_column(_("Paid Amount in"), fieldname="paid")
 		if self.account_type == "Receivable":
+			self.add_column(_("Credit Note in Account Currency"), fieldname="credit_note_in_account_currency", options="account_currency")
 			self.add_column(_("Credit Note"), fieldname="credit_note")
 		else:
 			# note: fieldname is still `credit_note`
+			self.add_column(_("Debit Note in Account Currency"), fieldname="credit_note_in_account_currency", options="account_currency")
 			self.add_column(_("Debit Note"), fieldname="credit_note")
+		self.add_column(_("Outstanding in Account Currency"), fieldname="outstanding_in_account_currency", options="account_currency")
 		self.add_column(_("Outstanding Amount"), fieldname="outstanding")
 
 		self.add_column(label=_("Age (Days)"), fieldname="age", fieldtype="Int", width=80)
 		self.setup_ageing_columns()
-
-		self.add_column(
-			label=_("Currency"), fieldname="currency", fieldtype="Link", options="Currency", width=80
-		)
 
 		if self.filters.show_future_payments:
 			self.add_column(label=_("Future Payment Ref"), fieldname="future_ref", fieldtype="Data")
