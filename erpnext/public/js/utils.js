@@ -608,6 +608,7 @@ erpnext.utils.update_child_items = function (opts) {
 			docname: d.name,
 			name: d.name,
 			item_code: d.item_code,
+			item_name: d.item_name,
 			delivery_date: d.delivery_date,
 			schedule_date: d.schedule_date,
 			conversion_factor: d.conversion_factor,
@@ -654,6 +655,14 @@ erpnext.utils.update_child_items = function (opts) {
 					filters: filters,
 				};
 			},
+		},
+		{
+			fieldtype: "Data",
+			fieldname: "item_name",
+			default: 0,
+			read_only: 0,
+			in_list_view: 1,
+			label: __("Item Name"),
 		},
 		{
 			fieldtype: "Link",

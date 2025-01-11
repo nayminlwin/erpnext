@@ -89,11 +89,15 @@ def get_data(filters):
 						& (DepreciationSchedule.schedule_date == d.posting_date)
 					)
 				).run(as_dict=True)
-				asset_data.accumulated_depreciation_amount = query[0]["accumulated_depreciation_amount"]
+				if len(query):
+					asset_data.accumulated_depreciation_amount = query[0]["accumulated_depreciation_amount"]
+				else:
+					asset_data.accumulated_depreciation_amount = d.debit
 
 			else:
 				asset_data.accumulated_depreciation_amount += d.debit
-			asset_data.opening_accumulated_depreciation = asset_data.accumulated_depreciation_amount - d.debit
+			asset_data.opening_accumulated_depreciation = asset_data.accumulated_depreciation_amount - d.debit\
+				if asset_data.accumulated_depreciation_amount else 0
 
 			row = frappe._dict(asset_data)
 			row.update(
