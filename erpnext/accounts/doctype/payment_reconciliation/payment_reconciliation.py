@@ -71,7 +71,7 @@ class PaymentReconciliation(Document):
 		self.common_filter_conditions = []
 		self.accounting_dimension_filter_conditions = []
 		self.ple_posting_date_filter = []
-		self.dimensions = get_dimensions()[0]
+		self.dimensions = get_dimensions(with_cost_center_and_project=True)[0]
 
 	def load_from_db(self):
 		# 'modified' attribute is required for `run_doc_method` to work properly.
@@ -177,7 +177,7 @@ class PaymentReconciliation(Document):
 		# pass dynamic dimension filter values to query builder
 		dimensions = {}
 		for x in self.dimensions:
-			dimension = x.fieldname
+			dimension = x.get('fieldname')
 			if self.get(dimension):
 				dimensions.update({dimension: self.get(dimension)})
 		condition.update({"accounting_dimensions": dimensions})
@@ -201,7 +201,7 @@ class PaymentReconciliation(Document):
 
 		# Dimension filters
 		for x in self.dimensions:
-			dimension = x.fieldname
+			dimension = x.get('fieldname')
 			if self.get(dimension):
 				conditions.append(jea[dimension] == self.get(dimension))
 
@@ -471,7 +471,7 @@ class PaymentReconciliation(Document):
 
 	def update_dimension_values_in_allocated_entries(self, res):
 		for x in self.dimensions:
-			dimension = x.fieldname
+			dimension = x.get('fieldname')
 			if self.get(dimension):
 				res[dimension] = self.get(dimension)
 		return res
@@ -574,8 +574,8 @@ class PaymentReconciliation(Document):
 		)
 
 		for x in self.dimensions:
-			if row.get(x.fieldname):
-				payment_details[x.fieldname] = row.get(x.fieldname)
+			if row.get(x.get('fieldname')):
+				payment_details[x.get('fieldname')] = row.get(x.get('fieldname'))
 
 		return payment_details
 
@@ -692,7 +692,7 @@ class PaymentReconciliation(Document):
 	def build_dimensions_filter_conditions(self):
 		ple = qb.DocType("Payment Ledger Entry")
 		for x in self.dimensions:
-			dimension = x.fieldname
+			dimension = x.get('fieldname')
 			if self.get(dimension):
 				self.accounting_dimension_filter_conditions.append(ple[dimension] == self.get(dimension))
 
