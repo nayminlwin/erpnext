@@ -2171,7 +2171,7 @@ def get_outstanding_reference_documents(args, validate=False):
 	outstanding_invoices = []
 	negative_outstanding_invoices = []
 
-	if args.get("book_advance_payments_in_separate_party_account"):
+	if args.get("book_advance_payments_in_separate_party_account") and not args.get("party_account"):
 		party_account = get_party_account(args.get("party_type"), args.get("party"), args.get("company"))
 	else:
 		party_account = args.get("party_account")
