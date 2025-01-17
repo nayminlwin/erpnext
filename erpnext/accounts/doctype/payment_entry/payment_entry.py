@@ -152,33 +152,37 @@ class PaymentEntry(AccountsController):
 				self.is_opening = "No"
 				return
 
-		accounts = get_party_account(self.party_type, self.party, self.company, include_advance=True)
-
-		liability_account = accounts[1] if len(accounts) > 1 else None
-		fieldname = (
-			"default_advance_received_account"
-			if self.party_type == "Customer"
-			else "default_advance_paid_account"
-		)
+		liability_account = self.paid_from if self.party_type == "Customer" else self.paid_to
 
 		if not liability_account:
-			throw(
-				_("Please set default {0} in Company {1}").format(
-					frappe.bold(frappe.get_meta("Company").get_label(fieldname)), frappe.bold(self.company)
-				)
+			accounts = get_party_account(self.party_type, self.party, self.company, include_advance=True)
+
+			liability_account = accounts[1] if len(accounts) > 1 else None
+
+			fieldname = (
+				"default_advance_received_account"
+				if self.party_type == "Customer"
+				else "default_advance_paid_account"
 			)
 
-		self.set(self.party_account_field, liability_account)
+			if not liability_account:
+				throw(
+					_("Please set default {0} in Company {1}").format(
+						frappe.bold(frappe.get_meta("Company").get_label(fieldname)), frappe.bold(self.company)
+					)
+				)
 
-		frappe.msgprint(
-			_(
-				"Book Advance Payments as Liability option is chosen. Paid From account changed from {0} to {1}."
-			).format(
-				frappe.bold(self.party_account),
-				frappe.bold(liability_account),
-			),
-			alert=True,
-		)
+			self.set(self.party_account_field, liability_account)
+
+			frappe.msgprint(
+				_(
+					"Book Advance Payments as Liability option is chosen. Paid From account changed from {0} to {1}."
+				).format(
+					frappe.bold(self.party_account),
+					frappe.bold(liability_account),
+				),
+				alert=True,
+			)
 
 	def on_cancel(self):
 		self.ignore_linked_doctypes = (
@@ -1912,8 +1916,8 @@ class PaymentEntry(AccountsController):
 def get_matched_payment_request_of_references(references=None):
 	"""
 	Get those `Payment Requests` which are matched with `References`.\n
-	    - Amount must be same.
-	    - Only single `Payment Request` available for this amount.
+		- Amount must be same.
+		- Only single `Payment Request` available for this amount.
 
 	Example: [(reference_doctype, reference_name, allocated_amount, payment_request), ...]
 	"""
@@ -1967,8 +1971,8 @@ def get_matched_payment_request_of_references(references=None):
 def get_references_outstanding_amount(references=None):
 	"""
 	Fetch accurate outstanding amount of `References`.\n
-	    - If `Payment Term` is set, then fetch outstanding amount from `Payment Schedule`.
-	    - If `Payment Term` is not set, then fetch outstanding amount from `References` it self.
+		- If `Payment Term` is set, then fetch outstanding amount from `Payment Schedule`.
+		- If `Payment Term` is not set, then fetch outstanding amount from `References` it self.
 
 	Example: {(reference_doctype, reference_name, payment_term): outstanding_amount, ...}
 	"""
@@ -2015,7 +2019,7 @@ def get_outstanding_of_references_with_payment_term(references=None):
 def get_outstanding_of_references_with_no_payment_term(references):
 	"""
 	Fetch outstanding amount of `References` which have no `Payment Term` set.\n
-	    - Fetch outstanding amount from `References` it self.
+		- Fetch outstanding amount from `References` it self.
 
 	Note: `None` is used for allocation of `Payment Request`
 	Example: {(reference_doctype, reference_name, None): outstanding_amount, ...}
@@ -2853,7 +2857,7 @@ def get_payment_entry(
 def get_open_payment_requests_for_references(references=None):
 	"""
 	Fetch all unpaid Payment Requests for the references. \n
-	    - Each reference can have multiple Payment Requests. \n
+		- Each reference can have multiple Payment Requests. \n
 
 	Example: {("Sales Invoice", "SINV-00001"): {"PREQ-00001": 1000, "PREQ-00002": 2000}}
 	"""
@@ -2901,29 +2905,29 @@ def allocate_open_payment_requests_to_references(references=None, precision=None
 	Allocate unpaid Payment Requests to the references. \n
 	---
 	- Allocation based on below factors
-	    - Reference Allocated Amount
-	    - Reference Outstanding Amount (With Payment Terms or without Payment Terms)
-	    - Reference Payment Request's outstanding amount
+		- Reference Allocated Amount
+		- Reference Outstanding Amount (With Payment Terms or without Payment Terms)
+		- Reference Payment Request's outstanding amount
 	---
 	- Allocation based on below scenarios
-	    - Reference's Allocated Amount == Payment Request's Outstanding Amount
-	        - Allocate the Payment Request to the reference
-	        - This PR will not be allocated further
-	    - Reference's Allocated Amount < Payment Request's Outstanding Amount
-	        - Allocate the Payment Request to the reference
-	        - Reduce the PR's outstanding amount by the allocated amount
-	        - This PR can be allocated further
-	    - Reference's Allocated Amount > Payment Request's Outstanding Amount
-	        - Allocate the Payment Request to the reference
-	        - Reduce Allocated Amount of the reference by the PR's outstanding amount
-	        - Create a new row for the remaining amount until the Allocated Amount is 0
-	            - Allocate PR if available
+		- Reference's Allocated Amount == Payment Request's Outstanding Amount
+			- Allocate the Payment Request to the reference
+			- This PR will not be allocated further
+		- Reference's Allocated Amount < Payment Request's Outstanding Amount
+			- Allocate the Payment Request to the reference
+			- Reduce the PR's outstanding amount by the allocated amount
+			- This PR can be allocated further
+		- Reference's Allocated Amount > Payment Request's Outstanding Amount
+			- Allocate the Payment Request to the reference
+			- Reduce Allocated Amount of the reference by the PR's outstanding amount
+			- Create a new row for the remaining amount until the Allocated Amount is 0
+				- Allocate PR if available
 	---
 	- Note:
-	    - Priority is given to the first Payment Request of respective references.
-	    - Single Reference can have multiple rows.
-	        - With Payment Terms or without Payment Terms
-	        - With Payment Request or without Payment Request
+		- Priority is given to the first Payment Request of respective references.
+		- Single Reference can have multiple rows.
+			- With Payment Terms or without Payment Terms
+			- With Payment Request or without Payment Request
 	"""
 	if not references:
 		return
