@@ -1151,6 +1151,7 @@ erpnext.stock.StockEntry = class StockEntry extends erpnext.stock.StockControlle
 				args: {
 					fieldname: "stock_adjustment_account",
 					company: this.frm.doc.company,
+					ignore_validation: true,
 				},
 				callback: function (r) {
 					if (!r.exc) {

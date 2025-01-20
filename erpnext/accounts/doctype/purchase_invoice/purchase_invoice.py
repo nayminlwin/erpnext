@@ -321,13 +321,14 @@ class PurchaseInvoice(BuyingController):
 
 	def create_remarks(self):
 		if not self.remarks:
+			po_no_list = [i.purchase_order for i in self.items if i.purchase_order]
+			self.remarks = ""
+			if po_no_list:
+				self.remarks += _(f"Against {po_no_list[0]}")
 			if self.bill_no:
-				self.remarks = _("Against Supplier Invoice {0}").format(self.bill_no)
+				self.remarks = _(f", Inv {self.bill_no} " if po_no_list else f"Against Inv {self.bill_no}")
 				if self.bill_date:
 					self.remarks += " " + _("dated {0}").format(formatdate(self.bill_date))
-
-			else:
-				self.remarks = _("No Remarks")
 
 	def set_missing_values(self, for_validate=False):
 		if not self.credit_to:
