@@ -198,11 +198,13 @@ frappe.query_reports["General Ledger"] = {
 			fieldname: "add_values_in_transaction_currency",
 			label: __("Add Columns in Transaction Currency"),
 			fieldtype: "Check",
+			default: 1,
 		},
 		{
 			fieldname: "show_remarks",
 			label: __("Show Remarks"),
 			fieldtype: "Check",
+			default: 1,
 		},
 		{
 			fieldname: "ignore_err",
