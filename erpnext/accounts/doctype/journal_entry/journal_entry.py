@@ -896,17 +896,34 @@ class JournalEntry(AccountsController):
 	def set_amounts_in_company_currency(self):
 		if not (self.voucher_type == "Exchange Gain Or Loss" and self.multi_currency):
 			for d in self.get("accounts"):
-				d.debit_in_account_currency = flt(
-					d.debit_in_account_currency, d.precision("debit_in_account_currency")
-				)
-				d.credit_in_account_currency = flt(
-					d.credit_in_account_currency, d.precision("credit_in_account_currency")
-				)
+				if d.debit_in_transaction_currency:
+					d.debit_in_account_currency = flt(
+						d.debit_in_transaction_currency * flt(self.exchange_rate), d.precision("debit_in_account_currency")
+					)
+				else:
+					d.debit_in_account_currency = flt(
+						d.debit_in_account_currency, d.precision("debit_in_account_currency")
+					)
+					d.debit_in_transaction_currency = d.debit_in_account_currency
+
+				if d.credit_in_transaction_currency:
+					d.credit_in_account_currency = flt(
+						d.credit_in_transaction_currency * flt(self.exchange_rate), d.precision("credit_in_account_currency")
+					)
+				else:
+					d.credit_in_account_currency = flt(
+						d.credit_in_account_currency, d.precision("credit_in_account_currency")
+					)
+					d.credit_in_transaction_currency = d.credit_in_account_currency
+
 
 				d.debit = flt(d.debit_in_account_currency * flt(d.exchange_rate), d.precision("debit"))
 				d.credit = flt(d.credit_in_account_currency * flt(d.exchange_rate), d.precision("credit"))
 
 	def set_exchange_rate(self):
+		if not self.transaction_currency:
+			self.transaction_currency = frappe.get_cached_value("Company", self.company, "default_currency")
+			self.exchange_rate = 1
 		for d in self.get("accounts"):
 			if d.account_currency == self.company_currency:
 				d.exchange_rate = 1
