@@ -22,9 +22,11 @@
   "column_break_10",
   "exchange_rate",
   "sec_break1",
+  "debit_in_transaction_currency",
   "debit_in_account_currency",
   "debit",
   "col_break2",
+  "credit_in_transaction_currency",
   "credit_in_account_currency",
   "credit",
   "reference",
@@ -130,10 +132,10 @@
    "columns": 2,
    "fieldname": "debit_in_account_currency",
    "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Debit",
+   "label": "Debit in Account Currency",
    "options": "account_currency",
-   "print_hide_if_no_value": 1
+   "print_hide_if_no_value": 1,
+   "read_only": 1
   },
   {
    "bold": 1,
@@ -156,10 +158,10 @@
    "columns": 2,
    "fieldname": "credit_in_account_currency",
    "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Credit",
+   "label": "Credit in Account Currency",
    "options": "account_currency",
-   "print_hide_if_no_value": 1
+   "print_hide_if_no_value": 1,
+   "read_only": 1
   },
   {
    "bold": 1,
@@ -263,12 +265,32 @@
    "label": "Reference Detail No",
    "no_copy": 1,
    "search_index": 1
+  },
+  {
+   "bold": 1,
+   "columns": 2,
+   "fieldname": "debit_in_transaction_currency",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Debit",
+   "options": "account_currency",
+   "print_hide_if_no_value": 1
+  },
+  {
+   "bold": 1,
+   "columns": 2,
+   "fieldname": "credit_in_transaction_currency",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Credit",
+   "options": "account_currency",
+   "print_hide_if_no_value": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-02-05 01:10:50.224840",
+ "modified": "2025-01-22 22:52:34.628059",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Journal Entry Account",

@@ -45,9 +45,8 @@ class JournalEntry(AccountsController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.accounts.doctype.journal_entry_account.journal_entry_account import JournalEntryAccount
+		from frappe.types import DF
 
 		accounts: DF.Table[JournalEntryAccount]
 		amended_from: DF.Link | None
@@ -61,6 +60,7 @@ class JournalEntry(AccountsController):
 		company: DF.Link
 		difference: DF.Currency
 		due_date: DF.Date | None
+		exchange_rate: DF.Float
 		finance_book: DF.Link | None
 		from_template: DF.Link | None
 		inter_company_journal_entry_reference: DF.Link | None
@@ -86,25 +86,9 @@ class JournalEntry(AccountsController):
 		total_amount_in_words: DF.Data | None
 		total_credit: DF.Currency
 		total_debit: DF.Currency
+		transaction_currency: DF.Link
 		user_remark: DF.SmallText | None
-		voucher_type: DF.Literal[
-			"Journal Entry",
-			"Inter Company Journal Entry",
-			"Bank Entry",
-			"Cash Entry",
-			"Credit Card Entry",
-			"Debit Note",
-			"Credit Note",
-			"Contra Entry",
-			"Excise Entry",
-			"Write Off Entry",
-			"Opening Entry",
-			"Depreciation Entry",
-			"Exchange Rate Revaluation",
-			"Exchange Gain Or Loss",
-			"Deferred Revenue",
-			"Deferred Expense",
-		]
+		voucher_type: DF.Literal["Journal Entry", "Inter Company Journal Entry", "Bank Entry", "Cash Entry", "Credit Card Entry", "Debit Note", "Credit Note", "Contra Entry", "Excise Entry", "Write Off Entry", "Opening Entry", "Depreciation Entry", "Exchange Rate Revaluation", "Exchange Gain Or Loss", "Deferred Revenue", "Deferred Expense"]
 		write_off_amount: DF.Currency
 		write_off_based_on: DF.Literal["Accounts Receivable", "Accounts Payable"]
 	# end: auto-generated types
@@ -1057,14 +1041,15 @@ class JournalEntry(AccountsController):
 		gl_map = []
 
 		company_currency = erpnext.get_company_currency(self.company)
-		if self.multi_currency:
+		if self.multi_currency and self.transaction_currency == company_currency:
 			for row in self.get("accounts"):
 				if row.account_currency != company_currency:
 					self.currency = row.account_currency
 					self.conversion_rate = row.exchange_rate
 					break
 		else:
-			self.currency = company_currency
+			self.currency = self.transaction_currency
+			self.conversion_rate = self.exchange_rate
 
 		for d in self.get("accounts"):
 			if d.debit or d.credit or (self.voucher_type == "Exchange Gain Or Loss"):
@@ -1088,6 +1073,14 @@ class JournalEntry(AccountsController):
 							),
 							"credit_in_account_currency": flt(
 								d.credit_in_account_currency, d.precision("credit_in_account_currency")
+							),
+							"transaction_currency": self.transaction_currency,
+							"transaction_exchange_rate": self.exchange_rate,
+							"debit_in_transaction_currency": flt(
+								d.debit_in_transaction_currency, d.precision("debit_in_transaction_currency")
+							),
+							"credit_in_transaction_currency": flt(
+								d.credit_in_transaction_currency, d.precision("credit_in_transaction_currency")
 							),
 							"against_voucher_type": d.reference_type,
 							"against_voucher": d.reference_name,
