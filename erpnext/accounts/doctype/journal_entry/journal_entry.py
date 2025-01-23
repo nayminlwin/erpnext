@@ -1666,6 +1666,9 @@ def make_reverse_journal_entry(source_name, target_doc=None):
 
 	def post_process(source, target):
 		target.reversal_of = source.name
+		target.title = f"Reversal: {source.title}"
+		if source.user_remark:
+			target.user_remark = f"Reversal: {source.user_remark}"
 
 	doclist = get_mapped_doc(
 		"Journal Entry",
