@@ -1677,8 +1677,10 @@ def make_reverse_journal_entry(source_name, target_doc=None):
 				"field_map": {
 					"account_currency": "account_currency",
 					"exchange_rate": "exchange_rate",
+					"debit_in_transaction_currency": "credit_in_transaction_currency",
 					"debit_in_account_currency": "credit_in_account_currency",
 					"debit": "credit",
+					"credit_in_transaction_currency": "debit_in_transaction_currency",
 					"credit_in_account_currency": "debit_in_account_currency",
 					"credit": "debit",
 					"reference_type": "reference_type",
