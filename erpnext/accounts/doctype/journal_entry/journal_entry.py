@@ -895,10 +895,13 @@ class JournalEntry(AccountsController):
 
 	def set_amounts_in_company_currency(self):
 		if not (self.voucher_type == "Exchange Gain Or Loss" and self.multi_currency):
+			company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
 			for d in self.get("accounts"):
+				exr = 1 if (self.transaction_currency != d.account_currency and
+							  d.account_currency != company_currency) else self.exchange_rate
 				if d.debit_in_transaction_currency:
 					d.debit_in_account_currency = flt(
-						d.debit_in_transaction_currency * flt(self.exchange_rate), d.precision("debit_in_account_currency")
+						d.debit_in_transaction_currency * flt(exr), d.precision("debit_in_account_currency")
 					)
 				else:
 					d.debit_in_account_currency = flt(
@@ -908,7 +911,7 @@ class JournalEntry(AccountsController):
 
 				if d.credit_in_transaction_currency:
 					d.credit_in_account_currency = flt(
-						d.credit_in_transaction_currency * flt(self.exchange_rate), d.precision("credit_in_account_currency")
+						d.credit_in_transaction_currency * flt(exr), d.precision("credit_in_account_currency")
 					)
 				else:
 					d.credit_in_account_currency = flt(

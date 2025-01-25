@@ -60,7 +60,7 @@ frappe.query_reports["Fixed Asset Register"] = {
 			label: __("Period Based On"),
 			fieldtype: "Select",
 			options: ["--Select a period--", "Fiscal Year", "Date Range"],
-			default: "--Select a period--",
+			default: "Fiscal Year",
 		},
 		{
 			fieldname: "from_date",

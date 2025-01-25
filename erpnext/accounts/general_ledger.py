@@ -358,8 +358,8 @@ def toggle_debit_credit_if_negative(gl_map):
 
 
 def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
-	if not from_repost:
-		validate_cwip_accounts(gl_map)
+	# if not from_repost:
+	# 	validate_cwip_accounts(gl_map)
 
 	process_debit_credit_difference(gl_map)
 

@@ -580,18 +580,21 @@ $.extend(erpnext.journal_entry, {
 		var company_currency = frappe.get_doc(":Company", frm.doc.company).default_currency;
 		var row = locals[cdt][cdn];
 
+		exr = (frm.doc.transaction_currency == row.account_currency && row.account_currency != company_currency)
+			? 1 : frm.doc.exchange_rate;
+
 		frappe.model.set_value(
 			cdt,
 			cdn,
 			"debit_in_account_currency",
-			flt(flt(row.debit_in_transaction_currency) * frm.doc.exchange_rate, precision("debit_in_account_currency", row))
+			flt(flt(row.debit_in_transaction_currency) * exr, precision("debit_in_account_currency", row))
 		);
 
 		frappe.model.set_value(
 			cdt,
 			cdn,
 			"credit_in_account_currency",
-			flt(flt(row.credit_in_transaction_currency) * frm.doc.exchange_rate, precision("credit_in_account_currency", row))
+			flt(flt(row.credit_in_transaction_currency) * exr, precision("credit_in_account_currency", row))
 		);
 
 		if (row.account_currency == company_currency || !frm.doc.multi_currency) {

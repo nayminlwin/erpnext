@@ -182,10 +182,10 @@ class AssetCapitalization(StockController):
 			args.update(d.as_dict())
 			args.doctype = self.doctype
 			args.name = self.name
-			service_item_details = get_service_item_details(args)
-			for k, v in service_item_details.items():
-				if d.meta.has_field(k) and (not d.get(k) or k in force_fields):
-					d.set(k, v)
+			# service_item_details = get_service_item_details(args)
+			# for k, v in service_item_details.items():
+			# 	if d.meta.has_field(k) and (not d.get(k) or k in force_fields):
+			# 		d.set(k, v)
 
 	def validate_target_item(self):
 		target_item = frappe.get_cached_doc("Item", self.target_item_code)
@@ -397,7 +397,7 @@ class AssetCapitalization(StockController):
 			self.asset_items_total += d.asset_value
 
 		for d in self.service_items:
-			d.amount = flt(flt(d.qty) * flt(d.rate), d.precision("amount"))
+			# d.amount = flt(flt(d.qty) * flt(d.rate), d.precision("amount"))
 			self.service_items_total += d.amount
 
 		self.stock_items_total = flt(self.stock_items_total, self.precision("stock_items_total"))
