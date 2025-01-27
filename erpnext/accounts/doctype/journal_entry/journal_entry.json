@@ -20,8 +20,6 @@
   "column_break1",
   "from_template",
   "company",
-  "transaction_currency",
-  "exchange_rate",
   "posting_date",
   "apply_tds",
   "2_add_edit_gl_entries",
@@ -545,19 +543,6 @@
    "label": "Is System Generated",
    "no_copy": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "transaction_currency",
-   "fieldtype": "Link",
-   "label": "Transaction Currency",
-   "options": "Currency",
-   "reqd": 1
-  },
-  {
-   "fieldname": "exchange_rate",
-   "fieldtype": "Float",
-   "label": "Exchange Rate",
-   "precision": "9"
   }
  ],
  "icon": "fa fa-file-text",
@@ -572,7 +557,7 @@
    "table_fieldname": "payment_entries"
   }
  ],
- "modified": "2025-01-22 20:12:18.998139",
+ "modified": "2025-01-27 12:57:54.500328",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Journal Entry",

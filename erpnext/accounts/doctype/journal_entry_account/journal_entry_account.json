@@ -18,8 +18,10 @@
   "dimension_col_break",
   "project",
   "currency_section",
+  "transaction_currency",
   "account_currency",
   "column_break_10",
+  "transaction_exchange_rate",
   "exchange_rate",
   "sec_break1",
   "debit_in_transaction_currency",
@@ -272,7 +274,7 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Debit",
-   "options": "account_currency",
+   "options": "transaction_currency",
    "print_hide_if_no_value": 1
   },
   {
@@ -282,14 +284,27 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Credit",
-   "options": "account_currency",
+   "options": "transaction_currency",
    "print_hide_if_no_value": 1
+  },
+  {
+   "fieldname": "transaction_currency",
+   "fieldtype": "Link",
+   "label": "Transaction Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "transaction_exchange_rate",
+   "fieldtype": "Float",
+   "label": "Transaction Exchange Rate",
+   "precision": "9",
+   "print_hide": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-01-23 09:41:18.167187",
+ "modified": "2025-01-26 20:53:57.916344",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Journal Entry Account",
