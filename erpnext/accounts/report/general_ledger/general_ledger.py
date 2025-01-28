@@ -353,8 +353,8 @@ def set_bill_no(gl_entries):
 	inv_details = get_supplier_invoice_details()
 	pay_details = get_payment_entry_details()
 	for gl in gl_entries:
-		gl["bill_no"] = inv_details.get(gl.get("against_voucher"), "")
-		gl["reference_no"] = pay_details.get(gl.get("against_voucher"), "")
+		gl["bill_no"] = inv_details.get(gl.get("voucher_no"), "")
+		gl["reference_no"] = pay_details.get(gl.get("voucher_no"), "")
 
 
 def get_data_with_opening_closing(filters, account_details, accounting_dimensions, gl_entries):
