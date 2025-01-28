@@ -571,7 +571,7 @@ $.extend(erpnext.journal_entry, {
 		var row = locals[cdt][cdn];
 
 		exr = row.transaction_currency == row.account_currency
-			? 1 : row.exchange_rate;
+			? 1 : row.transaction_exchange_rate;
 
 		frappe.model.set_value(
 			cdt,

@@ -896,7 +896,7 @@ class JournalEntry(AccountsController):
 			company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
 			for d in self.get("accounts"):
 				exr = 1 if d.account_currency == d.transaction_currency else\
-					d.exchange_rate
+					d.transaction_exchange_rate
 				if d.debit_in_transaction_currency:
 					d.debit_in_account_currency = flt(
 						d.debit_in_transaction_currency * flt(exr),
