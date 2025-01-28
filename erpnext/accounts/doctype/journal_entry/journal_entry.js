@@ -570,7 +570,8 @@ $.extend(erpnext.journal_entry, {
 	set_debit_credit_in_company_currency: function(frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
 
-		exr = row.transaction_currency == row.account_currency ? row.exchange_rate : (row.transaction_exchange_rate/row.exchange_rate);
+		exr = row.transaction_currency == row.account_currency
+			? 1 : row.exchange_rate;
 
 		frappe.model.set_value(
 			cdt,
