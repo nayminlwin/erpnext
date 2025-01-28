@@ -351,8 +351,10 @@ def get_accounts_with_children(accounts):
 
 def set_bill_no(gl_entries):
 	inv_details = get_supplier_invoice_details()
+	pay_details = get_payment_entry_details()
 	for gl in gl_entries:
 		gl["bill_no"] = inv_details.get(gl.get("against_voucher"), "")
+		gl["reference_no"] = pay_details.get(gl.get("against_voucher"), "")
 
 
 def get_data_with_opening_closing(filters, account_details, accounting_dimensions, gl_entries):
@@ -572,6 +574,16 @@ def get_supplier_invoice_details():
 
 	return inv_details
 
+def get_payment_entry_details():
+	pay_details = {}
+	for d in frappe.db.sql(
+		""" select name, reference_no from `tabPayment Entry`
+		where docstatus = 1 and reference_no is not null and reference_no != '' """,
+		as_dict=1,
+	):
+		pay_details[d.name] = d.reference_no
+
+	return pay_details
 
 def get_balance(row, balance, debit_field, credit_field):
 	balance += row.get(debit_field, 0) - row.get(credit_field, 0)
@@ -664,6 +676,18 @@ def get_columns(filters):
 			"fieldtype": "Dynamic Link",
 			"options": "voucher_type",
 			"width": 180,
+		},
+		{
+			"label": _("Bill No"),
+			"fieldname": "bill_no",
+			"fieldtype": "Data",
+			"width": 100,
+		},
+		{
+			"label": _("Reference No"),
+			"fieldname": "reference_no",
+			"fieldtype": "Data",
+			"width": 100,
 		},
 		{"label": _("Against Account"), "fieldname": "against", "width": 120},
 		{"label": _("Party Type"), "fieldname": "party_type", "width": 100},
