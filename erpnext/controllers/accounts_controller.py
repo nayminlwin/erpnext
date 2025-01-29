@@ -1054,8 +1054,6 @@ class AccountsController(TransactionBase):
 
 		# Update details in transaction currency
 		from pprint import pprint
-		pprint(item.__dict__)
-		pprint(gl_dict)
 		gl_dict.update(
 			{
 				"transaction_currency": gl_dict.get("transaction_currency") or \
@@ -1073,7 +1071,6 @@ class AccountsController(TransactionBase):
 				),
 			}
 		)
-		pprint(gl_dict)
 
 		if not args.get("against_voucher_type") and self.get("against_voucher_type"):
 			gl_dict.update({"against_voucher_type": self.get("against_voucher_type")})
