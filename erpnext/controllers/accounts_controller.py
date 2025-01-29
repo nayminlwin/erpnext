@@ -1053,23 +1053,27 @@ class AccountsController(TransactionBase):
 			)
 
 		# Update details in transaction currency
+		from pprint import pprint
+		pprint(item.__dict__)
+		pprint(gl_dict)
 		gl_dict.update(
 			{
-				"transaction_currency": item.get("transaction_currency") or \
+				"transaction_currency": gl_dict.get("transaction_currency") or \
 						self.get("currency") or self.company_currency,
-				"transaction_exchange_rate": item.get("transaction_exchange_rate", 1)
+				"transaction_exchange_rate": gl_dict.get("transaction_exchange_rate", 1)
 				if self.doctype == "Journal Entry" and item
 				else self.get("conversion_rate", 1),
-				"debit_in_transaction_currency": item.get("debit_in_transaction_currency") or \
+				"debit_in_transaction_currency": gl_dict.get("debit_in_transaction_currency") or \
 						self.get_value_in_transaction_currency(
 					account_currency, gl_dict, "debit"
 				),
-				"credit_in_transaction_currency": item.get("credit_in_transaction_currency") or \
+				"credit_in_transaction_currency": gl_dict.get("credit_in_transaction_currency") or \
 						self.get_value_in_transaction_currency(
 					account_currency, gl_dict, "credit"
 				),
 			}
 		)
+		pprint(gl_dict)
 
 		if not args.get("against_voucher_type") and self.get("against_voucher_type"):
 			gl_dict.update({"against_voucher_type": self.get("against_voucher_type")})
