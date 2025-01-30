@@ -1053,7 +1053,7 @@ class AccountsController(TransactionBase):
 			)
 
 		# Update details in transaction currency
-		from pprint import pprint
+		# from pprint import pprint
 		gl_dict.update(
 			{
 				"transaction_currency": gl_dict.get("transaction_currency") or \

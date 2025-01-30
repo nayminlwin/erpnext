@@ -893,8 +893,10 @@ class JournalEntry(AccountsController):
 
 	def set_amounts_in_company_currency(self):
 		if not (self.voucher_type == "Exchange Gain Or Loss" and self.multi_currency):
-			company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
+			# company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
 			for d in self.get("accounts"):
+				if not d.transaction_exchange_rate:
+					d.transaction_exchange_rate = 1
 				exr = 1 if d.account_currency == d.transaction_currency else\
 					d.transaction_exchange_rate
 				if d.debit_in_transaction_currency:
