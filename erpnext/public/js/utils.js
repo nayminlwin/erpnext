@@ -827,7 +827,7 @@ erpnext.utils.map_current_doc = function (opts) {
 	function _map() {
 		if ($.isArray(cur_frm.doc.items) && cur_frm.doc.items.length > 0) {
 			// remove first item row if empty
-			if (!cur_frm.doc.items[0].item_code) {
+			if (!cur_frm.doc.items[0].item_code && !cur_frm.doc.items[0].item_name) {
 				cur_frm.doc.items = cur_frm.doc.items.splice(1);
 			}
 
