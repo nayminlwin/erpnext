@@ -808,7 +808,9 @@ class PurchaseInvoice(BuyingController):
 					merge_entries=False,
 					from_repost=from_repost,
 				)
-				self.make_exchange_gain_loss_journal()
+				self.make_exchange_gain_loss_journal({
+					'difference_posting_date': self.posting_date
+					})
 		elif self.docstatus == 2:
 			make_reverse_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
 			self.cancel_provisional_entries()

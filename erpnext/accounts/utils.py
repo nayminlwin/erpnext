@@ -500,7 +500,9 @@ def reconcile_against_document(
 				# amount and account in args
 				# referenced_row is used to deduplicate gain/loss journal
 				entry.update({"referenced_row": referenced_row})
-				doc.make_exchange_gain_loss_journal([entry], dimensions_dict)
+				doc.make_exchange_gain_loss_journal({
+					'difference_posting_date': entry.get('difference_posting_date'),
+					}, dimensions_dict)
 			else:
 				referenced_row, update_advance_paid = update_reference_in_payment_entry(
 					entry,

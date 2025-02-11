@@ -1504,7 +1504,7 @@ class AccountsController(TransactionBase):
 
 						je = create_gain_loss_journal(
 							self.company,
-							args.get("difference_posting_date") if args else self.posting_date,
+							args.get("difference_posting_date") if args else (d.get('difference_posting_date') or self.posting_date),
 							self.party_type,
 							self.party,
 							party_account,
@@ -1559,6 +1559,7 @@ class AccountsController(TransactionBase):
 			if flt(d.allocated_amount) > 0:
 				args = frappe._dict(
 					{
+						"difference_posting_date": self.posting_date,
 						"voucher_type": d.reference_type,
 						"voucher_no": d.reference_name,
 						"voucher_detail_no": d.reference_row,
