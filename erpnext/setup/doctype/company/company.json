@@ -54,6 +54,7 @@
   "write_off_account",
   "exchange_gain_loss_account",
   "unrealized_exchange_gain_loss_account",
+  "exchange_gainloss_cost_center",
   "unrealized_profit_loss_account",
   "column_break0",
   "allow_account_creation_against_child_company",
@@ -808,6 +809,12 @@
    "fieldtype": "Link",
    "label": "Round Off for Opening",
    "options": "Account"
+  },
+  {
+   "fieldname": "exchange_gainloss_cost_center",
+   "fieldtype": "Link",
+   "label": "Exchange Gain/Loss Cost Center",
+   "options": "Cost Center"
   }
  ],
  "icon": "fa fa-building",
@@ -815,7 +822,7 @@
  "image_field": "company_logo",
  "is_tree": 1,
  "links": [],
- "modified": "2024-08-02 11:34:46.785377",
+ "modified": "2025-02-11 14:01:32.209901",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Company",
