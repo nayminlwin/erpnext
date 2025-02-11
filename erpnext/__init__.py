@@ -41,6 +41,12 @@ def get_default_cost_center(company):
 		frappe.flags.company_cost_center[company] = frappe.get_cached_value("Company", company, "cost_center")
 	return frappe.flags.company_cost_center[company]
 
+def get_exr_gainloss_cost_center(company):
+	"""Returns the default EXR gain/loss cost center of the company"""
+	if not company:
+		return None
+
+	return frappe.get_cached_value("Company", company, "exchange_gainloss_cost_center")
 
 def get_company_currency(company):
 	"""Returns the default company currency"""
