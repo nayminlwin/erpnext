@@ -86,12 +86,9 @@ class StockEntry(StockController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
-		from erpnext.stock.doctype.landed_cost_taxes_and_charges.landed_cost_taxes_and_charges import (
-			LandedCostTaxesandCharges,
-		)
+		from erpnext.stock.doctype.landed_cost_taxes_and_charges.landed_cost_taxes_and_charges import LandedCostTaxesandCharges
 		from erpnext.stock.doctype.stock_entry_detail.stock_entry_detail import StockEntryDetail
+		from frappe.types import DF
 
 		add_to_transit: DF.Check
 		additional_costs: DF.Table[LandedCostTaxesandCharges]
@@ -123,17 +120,7 @@ class StockEntry(StockController):
 		project: DF.Link | None
 		purchase_order: DF.Link | None
 		purchase_receipt_no: DF.Link | None
-		purpose: DF.Literal[
-			"Material Issue",
-			"Material Receipt",
-			"Material Transfer",
-			"Material Transfer for Manufacture",
-			"Material Consumption for Manufacture",
-			"Manufacture",
-			"Repack",
-			"Send to Subcontractor",
-			"Disassemble",
-		]
+		purpose: DF.Literal["Material Issue", "Material Receipt", "Material Transfer", "Material Transfer for Manufacture", "Material Consumption for Manufacture", "Manufacture", "Repack", "Send to Subcontractor", "Disassemble"]
 		remarks: DF.Text | None
 		sales_invoice_no: DF.Link | None
 		scan_barcode: DF.Data | None
@@ -295,6 +282,23 @@ class StockEntry(StockController):
 
 	def on_update(self):
 		self.set_serial_and_batch_bundle()
+
+	def before_update_after_submit(self):
+		self.calculate_rate_and_amount()
+
+	def on_update_after_submit(self):
+		# Clear SLE and GLE, and repost everything if amount changed
+		if self._doc_before_save.total_amount != self.total_amount:
+			frappe.db.sql(
+				"delete from `tabGL Entry` where voucher_type=%s and voucher_no=%s", (self.doctype, self.name)
+			)
+			frappe.db.sql(
+				"delete from `tabStock Ledger Entry` where voucher_type=%s and voucher_no=%s",
+				(self.doctype, self.name),
+			)
+			self.update_stock_ledger()
+			self.make_gl_entries()
+			self.repost_future_sle_and_gle()
 
 	def set_job_card_data(self):
 		if self.job_card and not self.work_order:
@@ -993,6 +997,7 @@ class StockEntry(StockController):
 				d.amount = flt(flt(d.basic_amount) + flt(d.additional_cost), d.precision("amount"))
 				# Do not round off valuation rate to avoid precision loss
 				d.valuation_rate = flt(d.basic_rate) + (flt(d.additional_cost) / flt(d.transfer_qty))
+				print(d.valuation_rate)
 
 	def set_total_incoming_outgoing_value(self):
 		self.total_incoming_value = self.total_outgoing_value = 0.0

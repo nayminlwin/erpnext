@@ -355,6 +355,7 @@
   },
   {
    "allow_bulk_edit": 1,
+   "allow_on_submit": 1,
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Items",
@@ -377,6 +378,7 @@
    "print_hide": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "total_incoming_value",
    "fieldtype": "Currency",
    "label": "Total Incoming Value (Receipt)",
@@ -389,6 +391,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "total_outgoing_value",
    "fieldtype": "Currency",
    "label": "Total Outgoing Value (Consumption)",
@@ -397,6 +400,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "value_difference",
    "fieldtype": "Currency",
    "label": "Total Value Difference (Incoming - Outgoing)",
@@ -697,7 +701,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-08-13 19:05:42.386955",
+ "modified": "2025-02-03 10:59:58.822630",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry",

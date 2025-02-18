@@ -495,7 +495,7 @@ def get_affected_transactions(doc, reposting_data=None) -> set[tuple[str, str]]:
 	if reposting_data and reposting_data.affected_transactions:
 		return {tuple(transaction) for transaction in reposting_data.affected_transactions}
 
-	if not doc.affected_transactions:
+	if not doc or not doc.affected_transactions:
 		return set()
 
 	transactions = frappe.parse_json(doc.affected_transactions)

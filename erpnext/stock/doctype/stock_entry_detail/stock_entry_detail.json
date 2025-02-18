@@ -173,6 +173,7 @@
    "print_hide": 1
   },
   {
+   "allow_on_submit": 1,
    "bold": 1,
    "fieldname": "qty",
    "fieldtype": "Float",
@@ -183,6 +184,7 @@
    "reqd": 1
   },
   {
+   "allow_on_submit": 1,
    "bold": 1,
    "fieldname": "basic_rate",
    "fieldtype": "Currency",
@@ -194,6 +196,7 @@
    "print_hide": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "basic_amount",
    "fieldtype": "Currency",
    "label": "Basic Amount",
@@ -210,6 +213,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "label": "Amount",
@@ -219,6 +223,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "valuation_rate",
    "fieldtype": "Currency",
    "label": "Valuation Rate",
@@ -328,6 +333,7 @@
    "label": "Accounting"
   },
   {
+   "allow_on_submit": 1,
    "depends_on": "eval:cint(erpnext.is_perpetual_inventory_enabled(parent.company))",
    "fieldname": "expense_account",
    "fieldtype": "Link",
@@ -336,6 +342,7 @@
    "print_hide": 1
   },
   {
+   "allow_on_submit": 1,
    "default": ":Company",
    "depends_on": "eval:cint(erpnext.is_perpetual_inventory_enabled(parent.company))",
    "fieldname": "cost_center",
@@ -351,6 +358,7 @@
    "label": "More Information"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "allow_zero_valuation_rate",
    "fieldtype": "Check",
@@ -515,6 +523,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "depends_on": "eval:parent.purpose===\"Repack\" && doc.t_warehouse",
    "fieldname": "set_basic_rate_manually",
@@ -552,6 +561,7 @@
    "label": "Is Scrap Item"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "is_finished_item",
    "fieldtype": "Check",
@@ -610,7 +620,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-02-25 15:58:40.982582",
+ "modified": "2025-02-17 11:31:39.021913",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry Detail",
