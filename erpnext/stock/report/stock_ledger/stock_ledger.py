@@ -347,6 +347,20 @@ def get_columns(filters):
 				"width": 100,
 			},
 			{
+				"label": _("Difference Account"),
+				"fieldname": "expense_account",
+				"fieldtype": "Link",
+				"options": "Account",
+				"width": 100,
+			},
+			{
+				"label": _("Cost Center"),
+				"fieldname": "cost_center",
+				"fieldtype": "Link",
+				"options": "Project",
+				"width": 100,
+			},
+			{
 				"label": _("Project"),
 				"fieldname": "project",
 				"fieldtype": "Link",
@@ -368,8 +382,11 @@ def get_columns(filters):
 
 def get_stock_ledger_entries(filters, items):
 	sle = frappe.qb.DocType("Stock Ledger Entry")
+	sed = frappe.qb.DocType("Stock Entry Detail")
 	query = (
 		frappe.qb.from_(sle)
+		.left_join(sed)
+		.on((sle.voucher_detail_no == sed.name) & (sle.voucher_no == sed.parent))
 		.select(
 			sle.item_code,
 			sle.posting_datetime.as_("date"),
@@ -389,6 +406,8 @@ def get_stock_ledger_entries(filters, items):
 			sle.batch_no,
 			sle.serial_no,
 			sle.project,
+			sed.cost_center,
+			sed.expense_account,
 		)
 		.where(
 			(sle.docstatus < 2)
@@ -424,6 +443,7 @@ def get_stock_ledger_entries(filters, items):
 			query = query.where(sle.batch_no == filters.batch_no)
 
 	query = apply_warehouse_filter(query, sle, filters)
+	print(query)
 
 	return query.run(as_dict=True)
 
