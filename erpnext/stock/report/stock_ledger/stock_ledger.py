@@ -443,7 +443,6 @@ def get_stock_ledger_entries(filters, items):
 			query = query.where(sle.batch_no == filters.batch_no)
 
 	query = apply_warehouse_filter(query, sle, filters)
-	print(query)
 
 	return query.run(as_dict=True)
 
