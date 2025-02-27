@@ -45,6 +45,8 @@ class StockBalanceReport:
 		self.from_date = getdate(filters.get("from_date"))
 		self.to_date = getdate(filters.get("to_date"))
 
+		self.has_gl_permission = frappe.has_permission("GL Entry", "read")
+
 		self.start_from = None
 		self.data = []
 		self.columns = []
@@ -142,7 +144,8 @@ class StockBalanceReport:
 				not self.filters.get("include_zero_stock_items")
 				and report_data
 				and report_data.bal_qty == 0
-				and report_data.bal_val == 0
+				and (not report_data.bal_val
+					or report_data.bal_val == 0)
 			):
 				continue
 
@@ -203,25 +206,30 @@ class StockBalanceReport:
 		else:
 			qty_diff = flt(entry.actual_qty)
 
-		value_diff = flt(entry.stock_value_difference)
+		value_diff = flt(entry.stock_value_difference) if self.has_gl_permission else 0.0
 
 		if entry.posting_date < self.from_date or entry.voucher_no in self.opening_vouchers.get(
 			entry.voucher_type, []
 		):
 			qty_dict.opening_qty += qty_diff
-			qty_dict.opening_val += value_diff
+			if self.has_gl_permission:
+				qty_dict.opening_val += value_diff
 
 		elif entry.posting_date >= self.from_date and entry.posting_date <= self.to_date:
 			if flt(qty_diff, self.float_precision) >= 0:
 				qty_dict.in_qty += qty_diff
-				qty_dict.in_val += value_diff
+				if self.has_gl_permission:
+					qty_dict.in_val += value_diff
 			else:
 				qty_dict.out_qty += abs(qty_diff)
-				qty_dict.out_val += abs(value_diff)
+				if self.has_gl_permission:
+					qty_dict.out_val += abs(value_diff)
 
-		qty_dict.val_rate = entry.valuation_rate
+		if self.has_gl_permission:
+			qty_dict.val_rate = entry.valuation_rate
 		qty_dict.bal_qty += qty_diff
-		qty_dict.bal_val += value_diff
+		if self.has_gl_permission:
+			qty_dict.bal_val += value_diff
 
 	def initialize_data(self, item_warehouse_map, group_by_key, entry):
 		opening_data = self.opening_data.get(group_by_key, {})
@@ -236,17 +244,20 @@ class StockBalanceReport:
 				"stock_uom": entry.stock_uom,
 				"item_name": entry.item_name,
 				"opening_qty": opening_data.get("bal_qty") or 0.0,
-				"opening_val": opening_data.get("bal_val") or 0.0,
 				"opening_fifo_queue": opening_data.get("fifo_queue") or [],
 				"in_qty": 0.0,
-				"in_val": 0.0,
 				"out_qty": 0.0,
-				"out_val": 0.0,
 				"bal_qty": opening_data.get("bal_qty") or 0.0,
-				"bal_val": opening_data.get("bal_val") or 0.0,
-				"val_rate": 0.0,
 			}
 		)
+		if self.has_gl_permission:
+			item_warehouse_map[group_by_key].update({
+				"opening_val": opening_data.get("bal_val") or 0.0,
+				"in_val": 0.0,
+				"out_val": 0.0,
+				"bal_val": opening_data.get("bal_val") or 0.0,
+				"val_rate": 0.0,
+				})
 
 	def get_group_by_key(self, row) -> tuple:
 		group_by_key = [row.company, row.item_code, row.warehouse]
@@ -298,14 +309,11 @@ class StockBalanceReport:
 				sle.warehouse,
 				sle.posting_date,
 				sle.actual_qty,
-				sle.valuation_rate,
 				sle.company,
 				sle.voucher_type,
 				sle.qty_after_transaction,
-				sle.stock_value_difference,
 				sle.item_code.as_("name"),
 				sle.voucher_no,
-				sle.stock_value,
 				sle.batch_no,
 				sle.serial_no,
 				sle.serial_and_batch_bundle,
@@ -319,6 +327,12 @@ class StockBalanceReport:
 			.orderby(sle.creation)
 			.orderby(sle.actual_qty)
 		)
+		if self.has_gl_permission:
+			query = query.select(
+				sle.valuation_rate,
+				sle.stock_value_difference,
+				sle.stock_value,
+					)
 
 		query = self.apply_inventory_dimensions_filters(query, sle)
 		query = self.apply_warehouse_filters(query, sle)
@@ -507,6 +521,11 @@ class StockBalanceReport:
 				{"label": att_name, "fieldname": att_name, "width": 100}
 				for att_name in get_variants_attributes()
 			]
+
+		if not self.has_gl_permission:
+			columns = [c for c in columns if c['fieldname'] not in [
+				'bal_val', 'opening_val', 'in_val', 'out_val', 'val_rate'
+				]]
 
 		return columns
 
