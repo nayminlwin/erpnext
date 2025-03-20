@@ -25,6 +25,7 @@ class PaymentReconciliationPayment(Document):
 		parenttype: DF.Data
 		posting_date: DF.Date | None
 		reference_name: DF.DynamicLink | None
+		reference_no: DF.Data | None
 		reference_row: DF.Data | None
 		reference_type: DF.Link | None
 		remarks: DF.SmallText | None

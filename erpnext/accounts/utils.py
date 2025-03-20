@@ -1158,6 +1158,7 @@ def get_outstanding_invoices(
 						{
 							"voucher_no": d.voucher_no,
 							"voucher_type": d.voucher_type,
+							"reference_no": d.reference_no,
 							"posting_date": d.posting_date,
 							"invoice_amount": flt(d.invoice_amount_in_account_currency),
 							"payment_amount": payment_amount,
@@ -1969,13 +1970,29 @@ class QueryPaymentLedger:
 					ple.against_voucher_no.isin([x[0] for x in outstanding_vouchers])
 				)
 
+		je = qb.DocType("Journal Entry")
+		pe = qb.DocType("Payment Entry")
+		si = qb.DocType("Sales Invoice")
+		pi = qb.DocType("Purchase Invoice")
+
 		# build query for voucher amount
 		query_voucher_amount = (
 			qb.from_(ple)
+			.left_join(je).on(ple.voucher_no == je.name)
+			.left_join(pe).on(ple.voucher_no == pe.name)
+			.left_join(si).on(ple.voucher_no == si.name)
+			.left_join(pi).on(ple.voucher_no == pi.name)
 			.select(
 				ple.account,
 				ple.voucher_type,
 				ple.voucher_no,
+				(
+					qb.terms.Case()
+					.when(ple.voucher_type == 'Journal Entry', je.cheque_no)
+					.when(ple.voucher_type == 'Payment Entry', pe.reference_no)
+					.when(ple.voucher_type == 'Sales Invoice', si.po_no)
+					.else_(pi.bill_no)
+				).as_("reference_no"),
 				ple.party_type,
 				ple.party,
 				ple.posting_date,
@@ -1997,10 +2014,21 @@ class QueryPaymentLedger:
 		# build query for voucher outstanding
 		query_voucher_outstanding = (
 			qb.from_(ple)
+			.left_join(je).on(ple.against_voucher_no == je.name)
+			.left_join(pe).on(ple.against_voucher_no == pe.name)
+			.left_join(si).on(ple.against_voucher_no == si.name)
+			.left_join(pi).on(ple.against_voucher_no == pi.name)
 			.select(
 				ple.account,
 				ple.against_voucher_type.as_("voucher_type"),
 				ple.against_voucher_no.as_("voucher_no"),
+				(
+					qb.terms.Case()
+					.when(ple.against_voucher_type == 'Journal Entry', je.cheque_no)
+					.when(ple.against_voucher_type == 'Payment Entry', pe.reference_no)
+					.when(ple.against_voucher_type == 'Sales Invoice', si.po_no)
+					.else_(pi.bill_no)
+				).as_("reference_no"),
 				ple.party_type,
 				ple.party,
 				ple.posting_date,
@@ -2032,6 +2060,8 @@ class QueryPaymentLedger:
 				Table("vouchers").account,
 				Table("vouchers").voucher_type,
 				Table("vouchers").voucher_no,
+				Table("vouchers").reference_no,
+				# Table("outstanding").reference_no.as_("outstanding_reference_no"),
 				Table("vouchers").party_type,
 				Table("vouchers").party,
 				Table("vouchers").posting_date,

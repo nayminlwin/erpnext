@@ -2939,6 +2939,7 @@ def get_common_query(
 			(payment_entry.name).as_("reference_name"),
 			payment_entry.posting_date,
 			(payment_entry.remarks).as_("remarks"),
+			(payment_entry.reference_no).as_("reference_no")
 		)
 		.where(payment_entry.payment_type == payment_type)
 		.where(payment_entry.party_type == party_type)

@@ -30,17 +30,10 @@ class PaymentReconciliation(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
+		from erpnext.accounts.doctype.payment_reconciliation_allocation.payment_reconciliation_allocation import PaymentReconciliationAllocation
+		from erpnext.accounts.doctype.payment_reconciliation_invoice.payment_reconciliation_invoice import PaymentReconciliationInvoice
+		from erpnext.accounts.doctype.payment_reconciliation_payment.payment_reconciliation_payment import PaymentReconciliationPayment
 		from frappe.types import DF
-
-		from erpnext.accounts.doctype.payment_reconciliation_allocation.payment_reconciliation_allocation import (
-			PaymentReconciliationAllocation,
-		)
-		from erpnext.accounts.doctype.payment_reconciliation_invoice.payment_reconciliation_invoice import (
-			PaymentReconciliationInvoice,
-		)
-		from erpnext.accounts.doctype.payment_reconciliation_payment.payment_reconciliation_payment import (
-			PaymentReconciliationPayment,
-		)
 
 		allocation: DF.Table[PaymentReconciliationAllocation]
 		bank_cash_account: DF.Link | None
@@ -154,7 +147,8 @@ class PaymentReconciliation(Document):
 
 	def get_payment_entries(self):
 		if self.default_advance_account:
-			party_account = [self.receivable_payable_account, self.default_advance_account]
+			# party_account = [self.receivable_payable_account, self.default_advance_account]
+			party_account = [self.default_advance_account]
 		else:
 			party_account = [self.receivable_payable_account]
 
@@ -195,6 +189,11 @@ class PaymentReconciliation(Document):
 		return payment_entries
 
 	def get_jv_entries(self):
+		if self.default_advance_account:
+			party_account = self.default_advance_account
+		else:
+			party_account = self.receivable_payable_account
+
 		je = qb.DocType("Journal Entry")
 		jea = qb.DocType("Journal Entry Account")
 		conditions = self.get_journal_filter_conditions()
@@ -232,6 +231,7 @@ class PaymentReconciliation(Document):
 				je.name.as_("reference_name"),
 				je.posting_date,
 				je.remark.as_("remarks"),
+				je.cheque_no.as_("reference_no"),
 				jea.name.as_("reference_row"),
 				dr_or_cr.as_("amount"),
 				jea.is_advance,
@@ -243,7 +243,7 @@ class PaymentReconciliation(Document):
 				(je.docstatus == 1)
 				& (jea.party_type == self.party_type)
 				& (jea.party == self.party)
-				& (jea.account == self.receivable_payable_account)
+				& (jea.account == party_account)
 				& (
 					(jea.reference_type == "")
 					| (jea.reference_type.isnull())
@@ -387,6 +387,7 @@ class PaymentReconciliation(Document):
 			inv = self.append("invoices", {})
 			inv.invoice_type = entry.get("voucher_type")
 			inv.invoice_number = entry.get("voucher_no")
+			inv.bill_no = entry.get("reference_no")
 			inv.invoice_date = entry.get("posting_date")
 			inv.amount = flt(entry.get("invoice_amount"))
 			inv.currency = entry.get("currency")

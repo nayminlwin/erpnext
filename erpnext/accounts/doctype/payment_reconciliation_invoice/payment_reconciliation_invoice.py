@@ -15,6 +15,7 @@ class PaymentReconciliationInvoice(Document):
 		from frappe.types import DF
 
 		amount: DF.Currency
+		bill_no: DF.Data | None
 		currency: DF.Link | None
 		exchange_rate: DF.Float
 		invoice_date: DF.Date | None

@@ -92,6 +92,7 @@
    "label": "Unreconciled Entries"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "payments",
    "fieldtype": "Table",
    "label": "Payments",
@@ -104,6 +105,7 @@
    "label": "Allocated Entries"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "invoices",
    "fieldtype": "Table",
    "label": "Invoices",
@@ -231,7 +233,7 @@
  "is_virtual": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-04-23 12:38:29.557315",
+ "modified": "2025-03-20 10:40:38.525029",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Reconciliation",
