@@ -250,7 +250,7 @@ class StockReconciliation(StockController):
 			validate_is_stock_item(item_code, item.is_stock_item)
 
 			# item should not be serialized
-			if item.has_serial_no and not row.serial_no and not item.serial_no_series:
+			if item.has_serial_no and row.qty and not row.serial_no and not item.serial_no_series:
 				raise frappe.ValidationError(
 					_("Serial no(s) required for serialized item {0}").format(item_code)
 				)
@@ -406,7 +406,7 @@ class StockReconciliation(StockController):
 		from erpnext.stock.stock_ledger import get_stock_value_difference
 
 		difference_amount = get_stock_value_difference(
-			row.item_code, row.warehouse, self.posting_date, self.posting_time
+			row.item_code, row.warehouse, self.posting_date, self.posting_time, self.name
 		)
 
 		if not difference_amount:

@@ -330,7 +330,11 @@ def make_supplier_quotation_from_rfq(source_name, target_doc=None, for_supplier=
 			},
 			"Request for Quotation Item": {
 				"doctype": "Supplier Quotation Item",
-				"field_map": {"name": "request_for_quotation_item", "parent": "request_for_quotation"},
+				"field_map": {
+					"name": "request_for_quotation_item",
+					"parent": "request_for_quotation",
+					"project_name": "project",
+				},
 			},
 		},
 		target_doc,
@@ -392,6 +396,7 @@ def create_rfq_items(sq_doc, supplier, data):
 		"material_request",
 		"material_request_item",
 		"stock_qty",
+		"uom",
 	]:
 		args[field] = data.get(field)
 

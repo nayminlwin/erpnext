@@ -209,7 +209,7 @@ class SerialNo(StockController):
 					OR serial_no like %s
 				)
 			ORDER BY
-				posting_date desc, posting_time desc, creation desc""",
+				posting_datetime desc, creation desc""",
 			(
 				self.item_code,
 				self.company,
@@ -335,11 +335,16 @@ def validate_serial_no(sle, item_det):
 					if sr.work_order and work_order and sr.work_order == work_order:
 						allow_existing_serial_no = True
 
-					if not allow_existing_serial_no and sle.voucher_type in [
-						"Stock Entry",
-						"Purchase Receipt",
-						"Purchase Invoice",
-					]:
+					if (
+						not allow_existing_serial_no
+						and sle.voucher_type
+						in [
+							"Stock Entry",
+							"Purchase Receipt",
+							"Purchase Invoice",
+						]
+						and cint(sle.actual_qty) > 0
+					):
 						msg = ""
 
 						if sle.voucher_type == "Stock Entry":
@@ -404,7 +409,7 @@ def validate_serial_no(sle, item_det):
 								)
 
 							# if Sales Order reference in Serial No validate the Delivery Note or Invoice is against the same
-							if sr.sales_order:
+							if sr.sales_order and sr.delivery_document_no:
 								if sle.voucher_type == "Sales Invoice":
 									if not frappe.db.exists(
 										"Sales Invoice Item",
