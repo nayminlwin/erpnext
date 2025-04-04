@@ -558,7 +558,7 @@ class PaymentReconciliation(Document):
 				"voucher_detail_no": row.get("reference_row"),
 				"against_voucher_type": row.get("invoice_type"),
 				"against_voucher": row.get("invoice_number"),
-				"account": self.receivable_payable_account,
+				"account": self.default_advance_account if self.default_advance_account else self.receivable_payable_account,
 				"exchange_rate": row.get("exchange_rate"),
 				"party_type": self.party_type,
 				"party": self.party,
