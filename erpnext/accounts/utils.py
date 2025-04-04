@@ -2025,7 +2025,7 @@ class QueryPaymentLedger:
 				ple.against_voucher_no.as_("voucher_no"),
 				(
 					qb.terms.Case()
-					.when(ple.against_voucher_type == 'Journal Entry', je.cheque_no)
+					.when(ple.against_voucher_type == 'Journal Entry', IfNull(je.bill_no, je.cheque_no))
 					.when(ple.against_voucher_type == 'Payment Entry', pe.reference_no)
 					.when(ple.against_voucher_type == 'Sales Invoice', si.po_no)
 					.else_(pi.bill_no)
