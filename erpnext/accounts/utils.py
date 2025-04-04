@@ -27,6 +27,7 @@ from frappe.utils import (
 )
 from pypika import Order
 from pypika.terms import ExistsCriterion
+from pypika.functions import IfNull
 
 import erpnext
 
@@ -1988,7 +1989,7 @@ class QueryPaymentLedger:
 				ple.voucher_no,
 				(
 					qb.terms.Case()
-					.when(ple.voucher_type == 'Journal Entry', je.cheque_no)
+					.when(ple.voucher_type == 'Journal Entry', IfNull(je.bill_no, je.cheque_no))
 					.when(ple.voucher_type == 'Payment Entry', pe.reference_no)
 					.when(ple.voucher_type == 'Sales Invoice', si.po_no)
 					.else_(pi.bill_no)
