@@ -573,7 +573,7 @@ def check_if_advance_entry_modified(args):
 			.on(journal_entry.name == journal_acc.parent)
 			.select(journal_acc[args.get("dr_or_cr")])
 			.where(
-				(journal_acc.account == args.get("account"))
+				(journal_acc.account == args.get("advance_account"))
 				& (journal_acc.party_type == args.get("party_type"))
 				& (journal_acc.party == args.get("party"))
 				& (
