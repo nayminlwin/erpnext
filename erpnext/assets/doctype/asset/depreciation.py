@@ -431,7 +431,7 @@ def get_comma_separated_links(names, doctype):
 
 
 @frappe.whitelist()
-def scrap_asset(asset_name):
+def scrap_asset(asset_name, date, posting_date, disposal_account):
 	asset = frappe.get_doc("Asset", asset_name)
 
 	if asset.docstatus != 1:
@@ -439,7 +439,7 @@ def scrap_asset(asset_name):
 	elif asset.status in ("Cancelled", "Sold", "Scrapped", "Capitalized", "Decapitalized"):
 		frappe.throw(_("Asset {0} cannot be scrapped, as it is already {1}").format(asset.name, asset.status))
 
-	date = today()
+	date = date if date else today()
 
 	notes = _("This schedule was created when Asset {0} was scrapped.").format(
 		get_link_to_form(asset.doctype, asset.name)
@@ -453,11 +453,11 @@ def scrap_asset(asset_name):
 	je = frappe.new_doc("Journal Entry")
 	je.voucher_type = "Journal Entry"
 	je.naming_series = depreciation_series
-	je.posting_date = date
+	je.posting_date = posting_date
 	je.company = asset.company
 	je.remark = f"Scrap Entry for asset {asset_name}"
 
-	for entry in get_gl_entries_on_asset_disposal(asset, date):
+	for entry in get_gl_entries_on_asset_disposal(asset, date=posting_date, disposal_account=disposal_account):
 		entry.update({"reference_type": "Asset", "reference_name": asset_name})
 		je.append("accounts", entry)
 
@@ -503,7 +503,8 @@ def depreciate_asset(asset_doc, date, notes):
 
 	asset_doc.flags.ignore_validate_update_after_submit = True
 
-	make_new_active_asset_depr_schedules_and_cancel_current_ones(asset_doc, notes, date_of_disposal=date)
+	make_new_active_asset_depr_schedules_and_cancel_current_ones(
+			asset_doc, notes, date_of_disposal=date)
 
 	asset_doc.save()
 
@@ -661,8 +662,11 @@ def get_gl_entries_on_asset_regain(
 
 
 def get_gl_entries_on_asset_disposal(
-	asset, selling_amount=0, finance_book=None, voucher_type=None, voucher_no=None, date=None
+	asset, selling_amount=0, finance_book=None, voucher_type=None, voucher_no=None, date=None,
+	disposal_account=None
 ):
+	accounting_dimensions = get_checks_for_pl_and_bs_accounts()
+
 	if not date:
 		date = getdate()
 
@@ -672,9 +676,16 @@ def get_gl_entries_on_asset_disposal(
 		depreciation_cost_center,
 		accumulated_depr_account,
 		accumulated_depr_amount,
-		disposal_account,
+		default_disposal_account,
 		value_after_depreciation,
 	) = get_asset_details(asset, finance_book)
+
+	disposal_account = disposal_account if disposal_account else default_disposal_account
+
+	dimension_values = {}
+	for dimension in accounting_dimensions:
+		if asset.get(dimension["fieldname"]):
+			dimension_values[dimension["fieldname"]] = asset.get(dimension["fieldname"])
 
 	gl_entries = [
 		asset.get_gl_dict(
@@ -684,7 +695,7 @@ def get_gl_entries_on_asset_disposal(
 				"credit": asset.gross_purchase_amount,
 				"cost_center": depreciation_cost_center,
 				"posting_date": date,
-			},
+			} | dimension_values,
 			item=asset,
 		),
 	]
@@ -698,15 +709,17 @@ def get_gl_entries_on_asset_disposal(
 					"debit": accumulated_depr_amount,
 					"cost_center": depreciation_cost_center,
 					"posting_date": date,
-				},
+				} | dimension_values,
 				item=asset,
 			),
 		)
 
+
 	profit_amount = flt(selling_amount) - flt(value_after_depreciation)
 	if profit_amount:
 		get_profit_gl_entries(
-			asset, profit_amount, gl_entries, disposal_account, depreciation_cost_center, date
+			asset, profit_amount, gl_entries, disposal_account, depreciation_cost_center,
+			dimension_values, date
 		)
 
 	if voucher_type and voucher_no:
@@ -740,7 +753,8 @@ def get_asset_details(asset, finance_book=None):
 
 
 def get_profit_gl_entries(
-	asset, profit_amount, gl_entries, disposal_account, depreciation_cost_center, date=None
+	asset, profit_amount, gl_entries, disposal_account, depreciation_cost_center, dimension_values,
+	date=None
 ):
 	if not date:
 		date = getdate()
@@ -754,7 +768,7 @@ def get_profit_gl_entries(
 				debit_or_credit: abs(profit_amount),
 				debit_or_credit + "_in_account_currency": abs(profit_amount),
 				"posting_date": date,
-			},
+			} | dimension_values,
 			item=asset,
 		)
 	)

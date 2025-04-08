@@ -802,17 +802,63 @@ frappe.ui.form.on("Asset Finance Book", {
 });
 
 erpnext.asset.scrap_asset = function (frm) {
-	frappe.confirm(__("Do you really want to scrap this asset?"), function () {
-		frappe.call({
-			args: {
-				asset_name: frm.doc.name,
+
+		const title = __("Scrap Asset");
+
+		const fields = [
+			{
+				fieldname: "date",
+				fieldtype: "Date",
+				label: __("Scrap Date"),
+				reqd: 1,
 			},
-			method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
-			callback: function (r) {
-				cur_frm.reload_doc();
+			{
+				fieldname: "posting_date",
+				fieldtype: "Date",
+				label: __("Posting Date"),
+				reqd: 1,
 			},
+			{
+				fieldname: "disposal_account",
+				fieldtype: "Link",
+				options: "Account",
+				label: __("Write Off Account"),
+				reqd: 1,
+				get_query: () => {
+					var company = frm.doc.company;
+					return {
+						filters: {
+							company: company,
+							is_group: 0,
+							report_type: "Profit and Loss"
+						},
+					};
+				},
+			}
+		];
+
+		let dialog = new frappe.ui.Dialog({
+			title: title,
+			fields: fields,
 		});
-	});
+
+		dialog.set_primary_action(__("Scrap"), function () {
+			const dialog_data = dialog.get_values();
+			frappe.call({
+				args: {
+					asset_name: frm.doc.name,
+					...dialog_data
+				},
+				method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
+				callback: function (_r) {
+					cur_frm.reload_doc();
+				},
+			});
+
+			dialog.hide();
+		});
+
+		dialog.show();
 };
 
 erpnext.asset.restore_asset = function (frm) {
