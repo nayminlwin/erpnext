@@ -97,6 +97,14 @@ frappe.ui.form.on("Asset", {
 				);
 
 				frm.add_custom_button(
+					__("Mark As Scrap"),
+					function () {
+						erpnext.asset.mark_scrap_asset(frm);
+					},
+					__("Manage")
+				);
+
+				frm.add_custom_button(
 					__("Sell Asset"),
 					function () {
 						frm.trigger("make_sales_invoice");
@@ -850,6 +858,56 @@ erpnext.asset.scrap_asset = function (frm) {
 					...dialog_data
 				},
 				method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
+				callback: function (_r) {
+					cur_frm.reload_doc();
+				},
+			});
+
+			dialog.hide();
+		});
+
+		dialog.show();
+};
+
+erpnext.asset.mark_scrap_asset = function (frm) {
+
+		const title = __("Mark as Scrap");
+
+		const fields = [
+			{
+				fieldname: "disposal_journal",
+				fieldtype: "Link",
+				options: "Journal Entry",
+				label: __("Scrap Journal Entry"),
+				reqd: 1,
+				get_query: () => {
+					var company = frm.doc.company;
+					return {
+						filters: {
+							company: company,
+							voucher_type: "Journal Entry",
+							reference_type: "Asset",
+							reference_name: frm.doc.name,
+							docstatus: 1,
+						},
+					};
+				},
+			}
+		];
+
+		let dialog = new frappe.ui.Dialog({
+			title: title,
+			fields: fields,
+		});
+
+		dialog.set_primary_action(__("Scrap"), function () {
+			const dialog_data = dialog.get_values();
+			frappe.call({
+				args: {
+					asset_name: frm.doc.name,
+					...dialog_data
+				},
+				method: "erpnext.assets.doctype.asset.depreciation.mark_scrap_asset",
 				callback: function (_r) {
 					cur_frm.reload_doc();
 				},

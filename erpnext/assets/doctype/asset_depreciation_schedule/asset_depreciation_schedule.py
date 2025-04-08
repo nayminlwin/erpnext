@@ -286,8 +286,6 @@ class AssetDepreciationSchedule(Document):
 		yearly_opening_wdv = value_after_depreciation
 		current_fiscal_year_end_date = None
 		prev_per_day_depr = True
-		depr_start_date = add_months(row.depreciation_start_date, start)
-		print(f"Depr Start: {depr_start_date}")
 		for n in range(start, final_number_of_depreciations):
 			# If depreciation is already completed (for double declining balance)
 			if skip_row:
