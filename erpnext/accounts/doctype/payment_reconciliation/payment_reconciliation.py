@@ -36,6 +36,7 @@ class PaymentReconciliation(Document):
 		from frappe.types import DF
 
 		allocation: DF.Table[PaymentReconciliationAllocation]
+		allocation_summary: DF.TextEditor | None
 		bank_cash_account: DF.Link | None
 		company: DF.Link
 		cost_center: DF.Link | None

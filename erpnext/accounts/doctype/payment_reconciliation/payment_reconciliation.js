@@ -86,6 +86,7 @@ erpnext.accounts.PaymentReconciliationController = class PaymentReconciliationCo
 			this.frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
 		}
 		if (this.frm.doc.allocation.length) {
+			this.summarize_allocation();
 			this.frm.add_custom_button(__("Reconcile"), () => this.frm.trigger("reconcile"));
 			this.frm.change_custom_button_type(__("Reconcile"), null, "primary");
 			this.frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
@@ -227,6 +228,52 @@ erpnext.accounts.PaymentReconciliationController = class PaymentReconciliationCo
 				this.frm.refresh();
 			},
 		});
+	}
+
+	summarize_allocation() {
+		let invoice_allocated_total = 0
+		let invoice_difference_total = 0
+		const invoices = this.frm.doc.allocation.reduce((prev, curr) => {
+			if (!prev[curr.invoice_number]) {
+				prev[curr.invoice_number] = {
+					allocated: 0.0,
+					difference: 0.0
+				}
+			}
+			prev[curr.invoice_number].allocated += curr.allocated_amount;
+			prev[curr.invoice_number].difference += curr.difference_amount;
+			invoice_allocated_total += curr.allocated_amount;
+			invoice_difference_total += curr.difference_amount;
+			return prev;
+		}, {});
+
+		const inv_html = Object.keys(invoices).map((inv_key) => {
+			const inv = invoices[inv_key];
+			return `
+				<tr>
+					<td>${inv_key}</td>
+					<td>${frappe.format(inv.allocated, {fieldtype: "Currency"})}</td>
+					<td>${frappe.format(inv.difference, {fieldtype: "Currency"})}</td>
+				</tr>
+			`;
+		}).join("");
+
+		this.frm.doc.allocation_summary = `
+			<table class="table table-bordered">
+				<tr>
+					<th>By Invoice</th>
+					<th>Total Allocated</th>
+					<th>Total Difference</th>
+				</tr>
+				${inv_html}
+				<tr>
+					<td class="bold">Total</td>
+				<td class="bold">${frappe.format(invoice_allocated_total, {fieldtype: "Currency"})}</td>
+					<td class="bold">${frappe.format(invoice_difference_total, {fieldtype: "Currency"})}</td>
+				</tr>
+			</table>
+		`;
+		this.frm.refresh_field('allocation_summary');
 	}
 
 	allocate() {
@@ -378,7 +425,7 @@ erpnext.accounts.PaymentReconciliationController = class PaymentReconciliationCo
 };
 
 frappe.ui.form.on("Payment Reconciliation Allocation", {
-	allocated_amount: function (frm, cdt, cdn) {
+	allocated_amount: function(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];
 		// filter invoice
 		let invoice = frm.doc.invoices.filter((x) => x.invoice_number == row.invoice_number);
@@ -398,6 +445,7 @@ frappe.ui.form.on("Payment Reconciliation Allocation", {
 					row.difference_amount = r.message;
 					frm.refresh();
 				}
+				frm.trigger("summarize_allocation");
 			},
 		});
 	},
