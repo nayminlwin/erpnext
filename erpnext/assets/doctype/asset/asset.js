@@ -875,6 +875,12 @@ erpnext.asset.mark_scrap_asset = function (frm) {
 
 		const fields = [
 			{
+				fieldname: "scrap_date",
+				fieldtype: "Date",
+				label: __("Scrap Date"),
+				reqd: 1,
+			},
+			{
 				fieldname: "disposal_journal",
 				fieldtype: "Link",
 				options: "Journal Entry",

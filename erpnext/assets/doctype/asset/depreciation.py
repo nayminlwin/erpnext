@@ -430,14 +430,15 @@ def get_comma_separated_links(names, doctype):
 	return links
 
 @frappe.whitelist()
-def mark_scrap_asset(asset_name, disposal_journal):
+def mark_scrap_asset(asset_name, disposal_journal, scrap_date):
 	asset = frappe.get_doc("Asset", asset_name)
 	journal = frappe.get_doc("Journal Entry", disposal_journal)
 
 	notes = _("This schedule was created when Asset {0} was scrapped.").format(
 		get_link_to_form(asset.doctype, asset.name)
 	)
-	make_new_active_asset_depr_schedules_and_cancel_current_ones(asset, notes)
+	make_new_active_asset_depr_schedules_and_cancel_current_ones(
+			asset, notes, date_of_disposal=scrap_date)
 
 	frappe.db.set_value("Asset", asset_name, "disposal_date", journal.posting_date)
 	frappe.db.set_value("Asset", asset_name, "journal_entry_for_scrap", journal.name)
