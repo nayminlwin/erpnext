@@ -201,10 +201,11 @@ class StockBalanceReport:
 		for field in self.inventory_dimensions:
 			qty_dict[field] = entry.get(field)
 
-		if entry.voucher_type == "Stock Reconciliation" and (not entry.batch_no or entry.serial_no):
-			qty_diff = flt(entry.qty_after_transaction) - flt(qty_dict.bal_qty)
-		else:
-			qty_diff = flt(entry.actual_qty)
+		# if entry.voucher_type == "Stock Reconciliation" and (not entry.batch_no or entry.serial_no):
+		# 	qty_diff = flt(entry.qty_after_transaction) - flt(qty_dict.bal_qty)
+		# else:
+		# 	qty_diff = flt(entry.actual_qty)
+		qty_diff = flt(entry.actual_qty)
 
 		value_diff = flt(entry.stock_value_difference) if self.has_gl_permission else 0.0
 
