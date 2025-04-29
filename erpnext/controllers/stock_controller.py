@@ -880,7 +880,7 @@ class StockController(AccountsController):
 					fieldname = f"{fieldname_start_with}_{dimension.source_fieldname}"
 					sl_dict[dimension.target_fieldname] = row.get(fieldname)
 
-					if not sl_dict.get(dimension.target_fieldname):
+					if not sl_dict.get(dimension.target_fieldname) and self.doctype != "Stock Entry":
 						sl_dict[dimension.target_fieldname] = row.get(dimension.source_fieldname)
 
 			elif row.get(dimension.source_fieldname):
