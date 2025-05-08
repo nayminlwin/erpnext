@@ -88,6 +88,7 @@
    "options": "ACC-ASS-.YYYY.-"
   },
   {
+   "allow_on_submit": 1,
    "depends_on": "item_code",
    "fetch_from": "item_code.item_name",
    "fetch_if_empty": 1,
@@ -605,7 +606,7 @@
    "link_fieldname": "target_asset"
   }
  ],
- "modified": "2025-01-29 13:55:32.549455",
+ "modified": "2025-05-08 16:16:35.184856",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset",
