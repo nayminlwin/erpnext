@@ -195,7 +195,7 @@ frappe.ui.form.on("Asset", {
 		if (frm.doc.docstatus == 0) {
 			frm.toggle_reqd("finance_books", frm.doc.calculate_depreciation);
 
-			if (frm.doc.is_composite_asset) {
+			if (frm.doc.is_composite_asset && !frm.is_new()) {
 				frappe.call({
 					method: "erpnext.assets.doctype.asset.asset.has_active_capitalization",
 					args: {
