@@ -368,7 +368,7 @@ def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
 		check_freezing_date(gl_map[0]["posting_date"], adv_adj)
 		is_opening = any(d.get("is_opening") == "Yes" for d in gl_map)
 		if gl_map[0]["voucher_type"] != "Period Closing Voucher":
-			validate_against_pcv(is_opening, gl_map[0]["posting_date"], gl_map[0]["company"])
+			validate_against_pcv(is_opening, gl_map[0]["posting_date"], gl_map[0]["company"], adv_adj=1)
 
 	for entry in gl_map:
 		validate_allowed_dimensions(entry, dimension_filter_map)
@@ -637,7 +637,7 @@ def make_reverse_gl_entries(
 		check_freezing_date(gl_entries[0]["posting_date"], adv_adj)
 
 		is_opening = any(d.get("is_opening") == "Yes" for d in gl_entries)
-		validate_against_pcv(is_opening, gl_entries[0]["posting_date"], gl_entries[0]["company"])
+		validate_against_pcv(is_opening, gl_entries[0]["posting_date"], gl_entries[0]["company"], adv_adj)
 		if partial_cancel:
 			# Partial cancel is only used by `Advance` in separate account feature.
 			# Only cancel GL entries for unlinked reference using `voucher_detail_no`
@@ -717,12 +717,15 @@ def check_freezing_date(posting_date, adv_adj=False):
 				)
 
 
-def validate_against_pcv(is_opening, posting_date, company):
+def validate_against_pcv(is_opening, posting_date, company, adv_adj=0):
 	if is_opening and frappe.db.exists("Period Closing Voucher", {"docstatus": 1, "company": company}):
 		frappe.throw(
 			_("Opening Entry can not be created after Period Closing Voucher is created."),
 			title=_("Invalid Opening Entry"),
 		)
+
+	if adv_adj:
+		return
 
 	last_pcv_date = frappe.db.get_value(
 		"Period Closing Voucher", {"docstatus": 1, "company": company}, "max(period_end_date)"

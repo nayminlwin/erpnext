@@ -480,7 +480,7 @@ def reconcile_against_document(
 		repost_whole_ledger = any([x.voucher_detail_no for x in entries])
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
 			if repost_whole_ledger:
-				doc.make_gl_entries(cancel=1)
+				doc.make_gl_entries(cancel=1, adv_adj=1)
 			else:
 				doc.make_advance_gl_entries(cancel=1)
 		else:
