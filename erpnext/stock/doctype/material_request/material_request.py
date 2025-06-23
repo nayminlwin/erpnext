@@ -169,6 +169,7 @@ class MaterialRequest(BuyingController):
 	def on_submit(self):
 		self.update_requested_qty_in_production_plan()
 		self.update_requested_qty()
+
 		if self.material_request_type == "Purchase" and frappe.db.exists(
 			"Budget", {"applicable_on_material_request": 1, "docstatus": 1}
 		):
@@ -178,6 +179,11 @@ class MaterialRequest(BuyingController):
 		self.set_status(update=True)
 
 	def before_submit(self):
+		if self.material_request_type == 'Purchase':
+			for item in self.items:
+				item.ordered_qty = 0
+				item.received_qty = 0
+
 		self.set_status(update=True)
 
 	def before_cancel(self):
