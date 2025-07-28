@@ -415,7 +415,15 @@ def get_totals_dict():
 
 	return _dict(
 		opening=_get_debit_credit_dict(_("Opening")),
-		total=_get_debit_credit_dict(_("Total")),
+		total= _dict(
+			account=f"Total",
+			debit=0.0,
+			credit=0.0,
+			debit_in_account_currency=0.0,
+			credit_in_account_currency=0.0,
+			debit_in_transaction_currency=0.0,
+			credit_in_transaction_currency=0.0,
+		),
 		closing=_get_debit_credit_dict(_("Closing (Opening + Total)")),
 	)
 
@@ -456,7 +464,7 @@ def get_accountwise_gle(filters, accounting_dimensions, gl_entries, gle_map, tot
 		data[key].debit_in_account_currency += gle.debit_in_account_currency
 		data[key].credit_in_account_currency += gle.credit_in_account_currency
 
-		if filters.get("add_values_in_transaction_currency") and key not in ["opening", "closing", "total"]:
+		if filters.get("add_values_in_transaction_currency") and key not in ["opening", "closing"]:
 			data[key].debit_in_transaction_currency += gle.debit_in_transaction_currency
 			data[key].credit_in_transaction_currency += gle.credit_in_transaction_currency
 
