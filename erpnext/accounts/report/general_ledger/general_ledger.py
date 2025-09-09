@@ -19,7 +19,6 @@ from erpnext.accounts.report.financial_statements import get_cost_centers_with_c
 from erpnext.accounts.report.utils import convert_to_presentation_currency, get_currency
 from erpnext.accounts.utils import get_account_currency
 
-
 def execute(filters=None):
 	if not filters:
 		return [], []
@@ -203,10 +202,10 @@ def get_gl_entries(filters, accounting_dimensions):
 		as_dict=1,
 	)
 
-	if filters.get("presentation_currency"):
-		return convert_to_presentation_currency(gl_entries, currency_map)
-	else:
-		return gl_entries
+	# if filters.get("presentation_currency"):
+	# 	return convert_to_presentation_currency(gl_entries, currency_map)
+	# else:
+	return gl_entries
 
 
 def get_conditions(filters):
