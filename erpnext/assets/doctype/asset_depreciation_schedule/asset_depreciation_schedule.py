@@ -648,7 +648,7 @@ def get_depreciation_amount(
 	has_wdv_or_dd_non_yearly_pro_rata=False,
 	number_of_pending_depreciations=0,
 	prev_per_day_depr=0,
-	start=0,
+	start=0
 ):
 	if fb_row.depreciation_method in ("Straight Line", "Manual"):
 		return get_straight_line_or_manual_depr_amount(
@@ -720,7 +720,6 @@ def get_straight_line_or_manual_depr_amount(
 def get_daily_prorata_based_straight_line_depr(
 	asset, row, schedule_idx, number_of_pending_depreciations, amount, start=0
 ):
-	from pprint import pprint
 	daily_depr_amount = get_daily_depr_amount(asset, row, schedule_idx, amount, start)
 
 	from_date, total_depreciable_days = _get_total_days(
@@ -749,7 +748,11 @@ def get_daily_depr_amount(asset, row, schedule_idx, amount, total_booked_depr=0)
 					get_last_day(
 						add_months(
 							row.depreciation_start_date,
-							total_booked_depr - 1,
+							((
+								row.frequency_of_depreciation
+								* (asset.opening_number_of_booked_depreciations + 1)
+							)
+							* -1) + total_booked_depr,
 						),
 					),
 					1,
