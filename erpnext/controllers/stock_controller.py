@@ -101,6 +101,10 @@ class StockController(AccountsController):
 		if self.doctype == "Stock Entry" and self.purpose == "Material Issue":
 			is_material_issue = True
 
+		is_material_trf = False
+		if self.doctype == "Stock Entry" and self.purpose == "Material Transfer":
+			is_material_trf = True
+
 		for d in self.get("items"):
 			if hasattr(d, "serial_no") and hasattr(d, "batch_no") and d.serial_no and d.batch_no:
 				serial_nos = frappe.get_all(
@@ -117,7 +121,7 @@ class StockController(AccountsController):
 							)
 						)
 
-			if is_material_issue:
+			if is_material_issue or is_material_trf:
 				continue
 
 			if flt(d.qty) > 0.0 and d.get("batch_no") and self.get("posting_date") and self.docstatus < 2:
