@@ -50,7 +50,7 @@ class Customer(TransactionBase):
 		self.flags.is_new_doc = self.is_new()
 		self.flags.old_lead = self.lead_name
 		validate_party_accounts(self)
-		self.validate_credit_limit_on_change()
+		# self.validate_credit_limit_on_change()
 		self.set_loyalty_program()
 		self.check_customer_group_change()
 
