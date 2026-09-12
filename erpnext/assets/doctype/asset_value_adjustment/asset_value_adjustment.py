@@ -106,12 +106,16 @@ class AssetValueAdjustment(Document):
 			"account": asset_account,
 			"credit_in_account_currency": self.difference_amount,
 			"cost_center": self.cost_center,
+			"reference_type": "Asset",
+			"reference_name": self.asset,
 		}
 
 		debit_entry = {
 			"account": self.expense_account,
 			"debit_in_account_currency": self.difference_amount,
 			"cost_center": self.cost_center,
+			"reference_type": "Asset",
+			"reference_name": self.asset,
 		}
 
 		accounting_dimensions = get_checks_for_pl_and_bs_accounts()
